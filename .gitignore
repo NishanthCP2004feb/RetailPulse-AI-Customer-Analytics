@@ -216,3 +216,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+data/processed/analysis_data.csv
+data/processed/retail_cleaned.csv
