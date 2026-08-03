@@ -72,12 +72,12 @@ top_country = country_summary.iloc[0]["Country"] if total_countries > 0 else "-"
 section_header("📊 Country Overview")
 st.markdown('<div class="rp-kpi-grid">', unsafe_allow_html=True)
 kpi1, kpi2, kpi3, kpi4, kpi5, kpi6 = st.columns(6)
-with kpi1: kpi_card("Countries", format_number(total_countries), "🌍")
-with kpi2: kpi_card("Total Revenue", format_compact_currency(total_revenue), "💰")
-with kpi3: kpi_card("Total Orders", format_number(total_orders), "📦")
-with kpi4: kpi_card("Customers", format_number(total_customers), "👥")
-with kpi5: kpi_card("Avg Rev/Country", format_compact_currency(average_country_revenue), "🧮")
-with kpi6: kpi_card("Top Country", top_country, "🏆")
+with kpi1: st.markdown(kpi_card("Countries", format_number(total_countries), "🌍"), unsafe_allow_html=True)
+with kpi2: st.markdown(kpi_card("Total Revenue", format_compact_currency(total_revenue), "💰"), unsafe_allow_html=True)
+with kpi3: st.markdown(kpi_card("Total Orders", format_number(total_orders), "📦"), unsafe_allow_html=True)
+with kpi4: st.markdown(kpi_card("Customers", format_number(total_customers), "👥"), unsafe_allow_html=True)
+with kpi5: st.markdown(kpi_card("Avg Rev/Country", format_compact_currency(average_country_revenue), "🧮"), unsafe_allow_html=True)
+with kpi6: st.markdown(kpi_card("Top Country", top_country, "🏆"), unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -89,7 +89,7 @@ with left_chart:
     section_header("💰 Top Countries by Revenue")
     top_revenue = country_summary.head(10)
     fig_rev = create_horizontal_bar_chart(top_revenue, "Revenue", "Country", color="Revenue")
-    st.plotly_chart(fig_rev, use_container_width=True, key="chart_rev")
+    st.plotly_chart(fig_rev, width="stretch", key="chart_rev")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_chart:
@@ -97,7 +97,7 @@ with right_chart:
     section_header("📦 Top Countries by Orders")
     top_orders = country_summary.sort_values("Orders", ascending=False).head(10)
     fig_ord = create_horizontal_bar_chart(top_orders, "Orders", "Country", color="Orders", text_auto=".3s")
-    st.plotly_chart(fig_ord, use_container_width=True, key="chart_ord")
+    st.plotly_chart(fig_ord, width="stretch", key="chart_ord")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -109,7 +109,7 @@ with left_cust:
     section_header("👥 Customers by Country")
     top_customers = country_summary.sort_values("Customers", ascending=False).head(10)
     fig_cust = create_horizontal_bar_chart(top_customers, "Customers", "Country", color="Customers", text_auto=".3s")
-    st.plotly_chart(fig_cust, use_container_width=True, key="chart_cust")
+    st.plotly_chart(fig_cust, width="stretch", key="chart_cust")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_cust:
@@ -117,7 +117,7 @@ with right_cust:
     section_header("💳 Average Order Value")
     top_aov = country_summary.sort_values("AverageOrderValue", ascending=False).head(10)
     fig_aov = create_horizontal_bar_chart(top_aov, "AverageOrderValue", "Country", color="AverageOrderValue")
-    st.plotly_chart(fig_aov, use_container_width=True, key="chart_aov")
+    st.plotly_chart(fig_aov, width="stretch", key="chart_aov")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -128,7 +128,7 @@ with left_scatter:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("📈 Revenue vs Customers")
     fig_scatter = create_scatter_chart(country_summary, "Customers", "Revenue", color="Revenue", size="Orders", hover_name="Country")
-    st.plotly_chart(fig_scatter, use_container_width=True, key="chart_scatter")
+    st.plotly_chart(fig_scatter, width="stretch", key="chart_scatter")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_pie:
@@ -139,7 +139,7 @@ with right_pie:
     if remaining > 0:
         top_pie.loc[len(top_pie)] = {"Country": "Others", "Revenue": remaining, "Orders": 0, "Customers": 0, "Quantity": 0, "AvgBasket": 0, "AverageOrderValue": 0}
     fig_pie = create_pie_chart(top_pie, "Country", "Revenue", hole=0.45)
-    st.plotly_chart(fig_pie, use_container_width=True, key="chart_pie")
+    st.plotly_chart(fig_pie, width="stretch", key="chart_pie")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -150,7 +150,7 @@ with left_hist:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("📊 Revenue Distribution")
     fig_hist = create_histogram(country_summary, "Revenue", nbins=25)
-    st.plotly_chart(fig_hist, use_container_width=True, key="chart_hist")
+    st.plotly_chart(fig_hist, width="stretch", key="chart_hist")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_pareto:
@@ -173,7 +173,7 @@ with right_pareto:
         margin=dict(l=40, r=40, t=40, b=40)
     )
     apply_chart_layout(fig_pareto, height=450)
-    st.plotly_chart(fig_pareto, use_container_width=True, key="chart_pareto")
+    st.plotly_chart(fig_pareto, width="stretch", key="chart_pareto")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -187,7 +187,7 @@ if search_country:
     display_table = display_table[display_table["Country"].str.contains(search_country, case=False, na=False)]
 
 display_table = display_table.sort_values("Revenue", ascending=False)
-st.dataframe(display_table, use_container_width=True, hide_index=True)
+st.dataframe(display_table, width="stretch", hide_index=True)
 
 st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
 csv = display_table.to_csv(index=False).encode("utf-8")

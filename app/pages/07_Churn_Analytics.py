@@ -96,7 +96,7 @@ with left_chart:
         hole=0.45
     )
     apply_chart_layout(fig_churn)
-    st.plotly_chart(fig_churn, use_container_width=True, key="churn_distribution_chart")
+    st.plotly_chart(fig_churn, width="stretch", key="churn_distribution_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_chart:
@@ -109,7 +109,7 @@ with right_chart:
         title="Probability Distribution"
     )
     apply_chart_layout(fig_prob)
-    st.plotly_chart(fig_prob, use_container_width=True, key="probability_distribution_chart")
+    st.plotly_chart(fig_prob, width="stretch", key="probability_distribution_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -130,7 +130,7 @@ with left_revenue:
     )
     fig_rev.update_xaxes(type="category")
     apply_chart_layout(fig_rev)
-    st.plotly_chart(fig_rev, use_container_width=True, key="revenue_at_risk_chart")
+    st.plotly_chart(fig_rev, width="stretch", key="revenue_at_risk_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_revenue:
@@ -146,7 +146,7 @@ with right_revenue:
         title="Recency vs Churn Probability"
     )
     apply_chart_layout(fig_recency)
-    st.plotly_chart(fig_recency, use_container_width=True, key="recency_probability_chart")
+    st.plotly_chart(fig_recency, width="stretch", key="recency_probability_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -161,7 +161,7 @@ fig_lifetime = px.histogram(
     title="Customer Lifetime"
 )
 apply_chart_layout(fig_lifetime)
-st.plotly_chart(fig_lifetime, use_container_width=True, key="customer_lifetime_chart")
+st.plotly_chart(fig_lifetime, width="stretch", key="customer_lifetime_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -189,7 +189,7 @@ with left_scatter:
         title="Revenue vs Customer Lifetime"
     )
     apply_chart_layout(fig_rev_life)
-    st.plotly_chart(fig_rev_life, use_container_width=True, key="revenue_lifetime_chart")
+    st.plotly_chart(fig_rev_life, width="stretch", key="revenue_lifetime_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_scatter:
@@ -205,7 +205,7 @@ with right_scatter:
         title="Frequency vs Monetary Value"
     )
     apply_chart_layout(fig_freq)
-    st.plotly_chart(fig_freq, use_container_width=True, key="frequency_monetary_chart")
+    st.plotly_chart(fig_freq, width="stretch", key="frequency_monetary_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -213,7 +213,7 @@ dashboard_divider()
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 section_header("📋 High Risk Customer Details")
 display_columns = ["CustomerID", "Recency", "Frequency", "Monetary", "CustomerLifetimeDays", "RevenuePerMonth", "ChurnProbability", "PredictedChurn"]
-st.dataframe(display_df[display_columns].sort_values("ChurnProbability", ascending=False), use_container_width=True, hide_index=True)
+st.dataframe(display_df[display_columns].sort_values("ChurnProbability", ascending=False), width="stretch", hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()

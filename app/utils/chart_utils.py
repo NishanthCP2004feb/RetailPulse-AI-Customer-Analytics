@@ -26,7 +26,7 @@ import plotly.graph_objects as go
 
 DEFAULT_TEMPLATE = "plotly_white"
 
-DEFAULT_HEIGHT = 500
+DEFAULT_HEIGHT = 460
 
 DEFAULT_COLOR_SEQUENCE = px.colors.qualitative.Set2
 
@@ -55,23 +55,18 @@ def apply_chart_layout(
 
         title_x=0.5,
 
-        font=dict(
-            family="Arial",
-            size=13,
-        ),
+        font=dict(family="Inter, Arial, sans-serif", size=13, color="#1F2937"),
 
         legend_title_text="",
 
-        hovermode="closest",
+        hovermode="x unified",
 
-        margin=dict(
-            l=20,
-            r=20,
-            t=60,
-            b=20,
-        ),
+        margin=dict(l=24, r=24, t=56, b=36),
 
         colorway=DEFAULT_COLOR_SEQUENCE,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#FFFFFF",
+        hoverlabel=dict(bgcolor="#0F172A", font_color="#FFFFFF"),
 
     )
 

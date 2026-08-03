@@ -147,7 +147,7 @@ with left_health:
 
     st.plotly_chart(
         fig_modules,
-        use_container_width=True,
+        width="stretch",
         key="business_module_coverage"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -166,7 +166,7 @@ with right_health:
 
     st.plotly_chart(
         fig_model,
-        use_container_width=True,
+        width="stretch",
         key="business_forecast_model"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -204,7 +204,7 @@ with left_churn:
 
     st.plotly_chart(
         fig_churn,
-        use_container_width=True,
+        width="stretch",
         key="business_churn_summary"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -234,7 +234,7 @@ with right_recommendation:
 
     st.plotly_chart(
         fig_segments,
-        use_container_width=True,
+        width="stretch",
         key="business_segment_summary"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -268,7 +268,7 @@ fig_inventory = create_bar_chart(
 
 st.plotly_chart(
     fig_inventory,
-    use_container_width=True,
+    width="stretch",
     key="business_inventory_summary"
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -283,7 +283,7 @@ section_header("💡 Notebook Generated Business Recommendations")
 
 st.dataframe(
     business_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -389,7 +389,7 @@ summary_df = pd.DataFrame(
 
 st.dataframe(
     summary_df,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -464,7 +464,7 @@ scorecard = pd.DataFrame(
 
 st.dataframe(
     scorecard,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -601,7 +601,7 @@ management_summary = pd.DataFrame(
 
 st.dataframe(
     management_summary,
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)

@@ -132,7 +132,7 @@ with left_chart:
         title="Customer Segments",
         hole=0.45
     )
-    st.plotly_chart(fig_segment_distribution, use_container_width=True, key="recommendation_segment_distribution")
+    st.plotly_chart(fig_segment_distribution, width="stretch", key="recommendation_segment_distribution")
 
 with right_chart:
     section_header("📊 Customers per Segment")
@@ -144,7 +144,7 @@ with right_chart:
         color="Customers",
         title="Segment Size"
     )
-    st.plotly_chart(fig_segment_bar, use_container_width=True, key="segment_bar_chart")
+    st.plotly_chart(fig_segment_bar, width="stretch", key="segment_bar_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -173,7 +173,7 @@ fig_top_products = create_horizontal_bar_chart(
     color="Recommendations",
     title="Top Recommended Products"
 )
-st.plotly_chart(fig_top_products, use_container_width=True, key="top_recommended_products")
+st.plotly_chart(fig_top_products, width="stretch", key="top_recommended_products")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -192,7 +192,7 @@ selected_segment = st.selectbox(
 )
 segment_df = filtered_df[filtered_df["Segment"] == selected_segment]
 
-st.dataframe(segment_df, use_container_width=True, hide_index=True)
+st.dataframe(segment_df, width="stretch", hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -238,7 +238,7 @@ with left_analysis:
         nbins=15,
         title="Recommendations per Customer"
     )
-    st.plotly_chart(fig_recommendation_count, use_container_width=True, key="recommendation_count_chart")
+    st.plotly_chart(fig_recommendation_count, width="stretch", key="recommendation_count_chart")
 
 with right_analysis:
     section_header("📊 Segment Recommendation Coverage")
@@ -259,7 +259,7 @@ with right_analysis:
         color="Customers",
         title="Average Recommendations by Segment"
     )
-    st.plotly_chart(fig_segment_summary, use_container_width=True, key="segment_recommendation_summary")
+    st.plotly_chart(fig_segment_summary, width="stretch", key="segment_recommendation_summary")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -273,7 +273,7 @@ section_header("📋 Customer Recommendations")
 
 st.dataframe(
     display_df.sort_values("Segment"),
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)

@@ -91,7 +91,7 @@ with left:
     monthly_sales_chart = create_monthly_sales_chart(df)
     st.plotly_chart(
         monthly_sales_chart,
-        use_container_width=True,
+        width="stretch",
         key="exec_monthly_sales"
     )
 
@@ -99,7 +99,7 @@ with right:
     top_products_chart = create_top_products_chart(df)
     st.plotly_chart(
         top_products_chart,
-        use_container_width=True,
+        width="stretch",
         key="exec_top_products"
     )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -118,7 +118,7 @@ left, right = st.columns([2, 1])
 with left:
     st.dataframe(
         df.head(10),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 

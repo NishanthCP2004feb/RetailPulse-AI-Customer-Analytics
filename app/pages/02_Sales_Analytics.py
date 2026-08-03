@@ -143,14 +143,14 @@ with col1:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("Monthly Revenue Trend")
     monthly_sales_fig = create_monthly_sales_chart(filtered_df)
-    st.plotly_chart(monthly_sales_fig, use_container_width=True, key="monthly_revenue")
+    st.plotly_chart(monthly_sales_fig, width="stretch", key="monthly_revenue")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("Revenue by Country (Top 10)")
     country_sales_fig = create_country_sales_chart(filtered_df, top_n=10)
-    st.plotly_chart(country_sales_fig, use_container_width=True, key="country_sales")
+    st.plotly_chart(country_sales_fig, width="stretch", key="country_sales")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================================
@@ -162,7 +162,7 @@ with col3:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("Top 10 Products by Revenue")
     top_products_fig = create_top_products_chart(filtered_df, top_n=10)
-    st.plotly_chart(top_products_fig, use_container_width=True, key="top_products")
+    st.plotly_chart(top_products_fig, width="stretch", key="top_products")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col4:
@@ -171,7 +171,7 @@ with col4:
     dow_revenue = filtered_df.groupby("DayName", as_index=False)["TotalAmount"].sum()
     dow_revenue = dow_revenue.sort_values("TotalAmount", ascending=False)
     dow_fig = create_bar_chart(dow_revenue, x="DayName", y="TotalAmount", title="Revenue by Day of Week")
-    st.plotly_chart(dow_fig, use_container_width=True, key="dow_revenue")
+    st.plotly_chart(dow_fig, width="stretch", key="dow_revenue")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================================
@@ -183,7 +183,7 @@ with col5:
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     section_header("Revenue Distribution")
     dist_fig = create_histogram(filtered_df, x="TotalAmount", title="Revenue Distribution", nbins=50)
-    st.plotly_chart(dist_fig, use_container_width=True, key="revenue_dist")
+    st.plotly_chart(dist_fig, width="stretch", key="revenue_dist")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col6:
@@ -192,7 +192,7 @@ with col6:
     monthly_orders = filtered_df.groupby("InvoiceMonthYear", as_index=False)["InvoiceID"].nunique()
     # To maintain temporal order, sort by the actual date proxy if possible, or just plot as is assuming it's pre-sorted
     monthly_orders_fig = create_line_chart(monthly_orders, x="InvoiceMonthYear", y="InvoiceID", title="Monthly Orders Trend", markers=True)
-    st.plotly_chart(monthly_orders_fig, use_container_width=True, key="monthly_orders")
+    st.plotly_chart(monthly_orders_fig, width="stretch", key="monthly_orders")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ==========================================================
@@ -201,7 +201,7 @@ with col6:
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 section_header("Revenue vs Quantity Scatter")
 scatter_fig = create_scatter_chart(filtered_df, x="Quantity", y="TotalAmount", title="Revenue vs Quantity", color="Country", hover_name="ProductDescription")
-st.plotly_chart(scatter_fig, use_container_width=True, key="rev_vs_qty")
+st.plotly_chart(scatter_fig, width="stretch", key="rev_vs_qty")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -211,7 +211,7 @@ dashboard_divider()
 # ==========================================================
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 section_header("Sales Data")
-st.dataframe(filtered_df.head(100), use_container_width=True)
+st.dataframe(filtered_df.head(100), width="stretch")
 
 st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
 csv_data = filtered_df.to_csv(index=False).encode('utf-8')

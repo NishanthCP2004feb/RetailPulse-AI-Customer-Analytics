@@ -137,6 +137,7 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 .rp-kpi-card {
     background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
     border-radius: var(--rp-radius);
+    min-width: 0;
     padding: 22px;
     border-left: 5px solid var(--rp-primary);
     box-shadow: var(--rp-shadow);
@@ -172,10 +173,14 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 }
 
 .rp-kpi-card .kpi-value {
-    font-size: 1.75rem;
+    font-size: clamp(1.15rem, 1.7vw, 1.75rem);
     font-weight: 800;
     color: var(--rp-text);
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Dynamic KPI border color via inline style override */
@@ -470,6 +475,22 @@ hr {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
+/* Plotly output sits in Streamlit's own container, so it is styled here rather
+   than with wrapper markup that cannot contain a Streamlit component. */
+[data-testid="stPlotlyChart"] {
+    background: var(--rp-card);
+    border: 1px solid var(--rp-border);
+    border-radius: var(--rp-radius-sm);
+    padding: 0.35rem;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+}
+
+.stDownloadButton > button,
+.stButton > button {
+    min-height: 2.5rem;
+}
+
 /* ---------- Scrollbar ---------- */
 ::-webkit-scrollbar {
     width: 6px;
@@ -519,5 +540,13 @@ hr {
     .block-container {
         padding-left: 1rem;
         padding-right: 1rem;
+    }
+
+    .rp-card {
+        padding: 16px;
+    }
+
+    [data-testid="stPlotlyChart"] {
+        padding: 0;
     }
 }

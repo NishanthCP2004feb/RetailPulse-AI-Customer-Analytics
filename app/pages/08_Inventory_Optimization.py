@@ -160,7 +160,7 @@ with left_chart:
         title="Inventory Status",
         hole=0.45
     )
-    st.plotly_chart(fig_inventory_status, use_container_width=True, key="inventory_status_chart")
+    st.plotly_chart(fig_inventory_status, width="stretch", key="inventory_status_chart")
 
 # ==========================================================
 # Recommendation Distribution
@@ -179,7 +179,7 @@ with right_chart:
         title="Inventory Recommendations",
         text_auto=True
     )
-    st.plotly_chart(fig_recommendation, use_container_width=True, key="recommendation_distribution_chart")
+    st.plotly_chart(fig_recommendation, width="stretch", key="recommendation_distribution_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -203,7 +203,7 @@ with left_products:
         title="Highest Quantity Products",
         text_auto=True
     )
-    st.plotly_chart(fig_quantity, use_container_width=True, key="inventory_quantity_chart")
+    st.plotly_chart(fig_quantity, width="stretch", key="inventory_quantity_chart")
 
 with right_products:
     section_header("💰 Top Products by Revenue")
@@ -217,7 +217,7 @@ with right_products:
         title="Highest Revenue Products",
         text_auto=".2s"
     )
-    st.plotly_chart(fig_revenue, use_container_width=True, key="inventory_revenue_chart")
+    st.plotly_chart(fig_revenue, width="stretch", key="inventory_revenue_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -238,7 +238,7 @@ fig_orders = create_bar_chart(
     title="Top Ordered Products",
     text_auto=True
 )
-st.plotly_chart(fig_orders, use_container_width=True, key="inventory_orders_chart")
+st.plotly_chart(fig_orders, width="stretch", key="inventory_orders_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -281,7 +281,7 @@ with left_scatter:
         hover_name="ProductDescription",
         title="Quantity vs Revenue"
     )
-    st.plotly_chart(fig_quantity_revenue, use_container_width=True, key="inventory_quantity_revenue_chart")
+    st.plotly_chart(fig_quantity_revenue, width="stretch", key="inventory_quantity_revenue_chart")
 
 with right_scatter:
     section_header("📈 Orders vs Revenue")
@@ -294,7 +294,7 @@ with right_scatter:
         hover_name="ProductDescription",
         title="Orders vs Revenue"
     )
-    st.plotly_chart(fig_orders_revenue, use_container_width=True, key="inventory_orders_revenue_chart")
+    st.plotly_chart(fig_orders_revenue, width="stretch", key="inventory_orders_revenue_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -318,7 +318,7 @@ display_columns = [
 
 st.dataframe(
     display_df[display_columns].sort_values("TotalRevenue", ascending=False),
-    use_container_width=True,
+    width="stretch",
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)

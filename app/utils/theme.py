@@ -22,6 +22,9 @@ RetailPulse
 """
 
 from pathlib import Path
+from collections.abc import Mapping
+from html import escape
+import re
 
 import plotly.express as px
 import streamlit as st
@@ -107,10 +110,10 @@ def page_header(title: str, subtitle: str = ""):
     """
     subtitle_html = ""
     if subtitle:
-        subtitle_html = f'<p class="rp-subtitle">{subtitle}</p>'
+        subtitle_html = f'<p class="rp-subtitle">{escape(str(subtitle))}</p>'
 
     st.markdown(
-        f'<div class="rp-page-header"><h1>{title}</h1>{subtitle_html}</div>',
+        f'<div class="rp-page-header"><h1>{escape(str(title))}</h1>{subtitle_html}</div>',
         unsafe_allow_html=True,
     )
 
@@ -127,7 +130,7 @@ def section_header(title: str):
     Uses CSS class .rp-section-header from style.css.
     """
     st.markdown(
-        f'<h3 class="rp-section-header">{title}</h3>',
+        f'<h3 class="rp-section-header">{escape(str(title))}</h3>',
         unsafe_allow_html=True,
     )
 
@@ -226,18 +229,17 @@ def kpi_card(
     color: str = PRIMARY,
 ):
     """
-    Display a reusable KPI card.
+    Return reusable KPI-card markup.
 
     Uses CSS class .rp-kpi-card from style.css.
     The border-left-color is set via inline style
     to support dynamic colors per card.
     """
-    st.markdown(
+    return (
         f'<div class="rp-kpi-card" style="border-left-color:{color}">'
-        f'<div class="kpi-label">{icon} {title}</div>'
-        f'<div class="kpi-value">{value}</div>'
-        f'</div>',
-        unsafe_allow_html=True,
+        f'<div class="kpi-label">{escape(str(icon))} {escape(str(title))}</div>'
+        f'<div class="kpi-value">{escape(str(value))}</div>'
+        f'</div>'
     )
 
 
@@ -255,7 +257,7 @@ def status_badge(text: str, color: str = SUCCESS):
     to support dynamic colors.
     """
     st.markdown(
-        f'<span class="rp-badge" style="background:{color}">{text}</span>',
+        f'<span class="rp-badge" style="background:{color}">{escape(str(text))}</span>',
         unsafe_allow_html=True,
     )
 
@@ -328,15 +330,20 @@ def render_kpi_row(kpis: list):
         {"title": "Orders", "value": "567", "icon": "📦"},
     ])
     """
-    cols = st.columns(len(kpis))
+    if not kpis:
+        return
 
+    cols = st.columns(len(kpis))
     for col, kpi in zip(cols, kpis):
         with col:
-            kpi_card(
-                title=kpi.get("title", ""),
-                value=str(kpi.get("value", "")),
-                icon=kpi.get("icon", "📊"),
-                color=kpi.get("color", PRIMARY),
+            st.markdown(
+                kpi_card(
+                    title=kpi.get("title", ""),
+                    value=str(kpi.get("value", "")),
+                    icon=kpi.get("icon", "📊"),
+                    color=kpi.get("color", PRIMARY),
+                ),
+                unsafe_allow_html=True,
             )
 
 
@@ -396,8 +403,8 @@ def sidebar_filters(df, filters=None):
 
 
 def render_insight_card(
-    title: str,
-    items: list,
+    title: str | Mapping,
+    items: list | str | None = None,
     card_type: str = "success",
 ):
     """
@@ -405,10 +412,13 @@ def render_insight_card(
 
     Parameters
     ----------
-    title : str
+    title : str or mapping
         Card heading.
-    items : list of str
-        Bullet-point items.
+    items : list of str or str, optional
+        Bullet-point items. A string is split into non-empty lines for
+        compatibility with the existing dashboard pages. A legacy insight
+        mapping with ``title``, ``description``, and optional ``icon`` may
+        also be passed as the sole argument.
     card_type : str
         One of 'success', 'info', 'warning', 'danger'.
 
@@ -422,14 +432,33 @@ def render_insight_card(
         "danger": "rp-risk-card",
     }
 
+    if isinstance(title, Mapping):
+        legacy_insight = title
+        icon = legacy_insight.get("icon", "")
+        insight_title = str(legacy_insight.get("title", ""))
+        title = f"{icon} {insight_title}".strip()
+        items = legacy_insight.get("description", items)
+
+    if isinstance(items, str):
+        items = [line.strip().lstrip("•").strip() for line in items.splitlines()]
+    elif items is None:
+        items = []
+    elif not isinstance(items, (list, tuple)):
+        items = [items]
+
+    non_empty_items = [str(item).strip() for item in items if str(item).strip()]
     css_class = class_map.get(card_type, "rp-info-card")
 
+    def format_item(item: str) -> str:
+        escaped_item = escape(item)
+        return re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped_item)
+
     bullet_html = "".join(
-        f"<p>• {item}</p>" for item in items
+        f"<p>• {format_item(item)}</p>" for item in non_empty_items
     )
 
     st.markdown(
-        f'<div class="{css_class}"><h4>{title}</h4>{bullet_html}</div>',
+        f'<div class="{css_class}"><h4>{escape(str(title))}</h4>{bullet_html}</div>',
         unsafe_allow_html=True,
     )
 

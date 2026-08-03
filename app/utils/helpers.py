@@ -11,6 +11,9 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+import numpy as np
+import pandas as pd
+
 
 # ==========================================================
 # Currency Formatting
@@ -108,14 +111,43 @@ def format_date(date: datetime) -> str:
 # ==========================================================
 
 def safe_divide(
-    numerator: float,
-    denominator: float,
-) -> float:
+    numerator: Any,
+    denominator: Any,
+) -> Any:
     """
-    Prevent division-by-zero errors.
+    Divide values while replacing zero or missing denominators with zero.
+
+    Scalar inputs return a scalar. Pandas objects and NumPy arrays are
+    calculated element-wise and retain their original container type where
+    applicable.
     """
 
-    if denominator in (0, None):
+    if isinstance(denominator, (pd.Series, pd.DataFrame)):
+        invalid_denominator = denominator.isna() | denominator.eq(0)
+        result = numerator / denominator.mask(invalid_denominator)
+        return result.mask(invalid_denominator, 0.0)
+
+    if isinstance(numerator, (pd.Series, pd.DataFrame)):
+        if denominator is None or denominator == 0:
+            return numerator * 0.0
+        return numerator / denominator
+
+    if isinstance(denominator, np.ndarray) or isinstance(numerator, np.ndarray):
+        denominator_array = np.asarray(denominator)
+        invalid_denominator = (denominator_array == 0) | pd.isna(denominator_array)
+        numerator_array, denominator_array = np.broadcast_arrays(
+            np.asarray(numerator), denominator_array
+        )
+        result = np.zeros(numerator_array.shape, dtype=float)
+        np.divide(
+            numerator_array,
+            denominator_array,
+            out=result,
+            where=~invalid_denominator,
+        )
+        return result
+
+    if denominator is None or denominator == 0:
         return 0.0
 
     return numerator / denominator
