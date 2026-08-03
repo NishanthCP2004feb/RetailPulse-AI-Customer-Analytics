@@ -1,16 +1,45 @@
-# ==========================================================
-# Imports
-# ==========================================================
-
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
-from utils.theme import load_css
+from utils.theme import (
+    load_css,
+    page_header,
+    section_header,
+    dashboard_divider,
+    dashboard_footer,
+    render_kpi_row,
+    render_insight_card,
+    success_banner,
+    warning_banner,
+    info_banner
+)
+
+from utils.data_loader import (
+    load_business_reports,
+    load_forecast_results,
+    load_forecast_model_comparison,
+    load_churn_data,
+    load_inventory_summary,
+    load_recommendations,
+    load_business_recommendations
+)
+
+from utils.helpers import (
+    format_currency,
+    format_number,
+    format_percentage
+)
+
+from utils.chart_utils import (
+    create_bar_chart,
+    create_pie_chart,
+    apply_chart_layout
+)
 
 # ==========================================================
 # Page Configuration
 # ==========================================================
-
 st.set_page_config(
     page_title="Business Insights",
     page_icon="📊",
@@ -22,69 +51,27 @@ load_css()
 # ==========================================================
 # Header
 # ==========================================================
-
-st.title("📊 Business Insights")
-
-st.caption(
-    "RetailPulse • Executive Business Intelligence Dashboard"
-)
-
-st.markdown("---")
+page_header("📊 Business Insights", "RetailPulse • Executive Business Intelligence Dashboard")
 
 # ==========================================================
 # Load Reports
 # ==========================================================
-
-@st.cache_data
-def load_reports():
-
-    forecast = pd.read_csv(
-        "reports/forecast_results.csv"
-    )
-
-    model = pd.read_csv(
-        "reports/forecasting_model_comparison.csv"
-    )
-
-    churn = pd.read_csv(
-        "reports/high_risk_customers.csv"
-    )
-
-    inventory = pd.read_csv(
-        "reports/inventory_summary.csv"
-    )
-
-    recommendations = pd.read_csv(
-        "reports/customer_product_recommendations.csv"
-    )
-
-    business = pd.read_csv(
-        "reports/business_recommendations.csv"
-    )
-
-    return (
-        forecast,
-        model,
-        churn,
-        inventory,
-        recommendations,
-        business,
-    )
-
-
-(
-    forecast_df,
-    model_df,
-    churn_df,
-    inventory_df,
-    recommendation_df,
-    business_df,
-) = load_reports()
+try:
+    (
+        forecast_df,
+        model_df,
+        churn_df,
+        inventory_df,
+        recommendation_df,
+        business_df,
+    ) = load_business_reports()
+except Exception as e:
+    st.error(f"Error loading business reports: {e}")
+    st.stop()
 
 # ==========================================================
 # Executive KPIs
 # ==========================================================
-
 best_model = (
     model_df
     .sort_values("RMSE")
@@ -92,75 +79,46 @@ best_model = (
 )
 
 forecast_days = len(forecast_df)
-
 customers = len(churn_df)
-
 high_risk = (
     churn_df["PredictedChurn"]
     .astype(str)
     .isin(["1", "True", "true"])
     .sum()
 )
-
 inventory_products = len(inventory_df)
-
 recommended_customers = len(recommendation_df)
-
 business_rules = len(business_df)
 
 # ==========================================================
 # KPI Cards
 # ==========================================================
+section_header("📈 Executive Overview")
 
-st.subheader("📈 Executive Overview")
+kpis1 = [
+    {"title": "Forecast Model", "value": best_model, "icon": "📈"},
+    {"title": "Forecast Days", "value": format_number(forecast_days), "icon": "📅"},
+    {"title": "Business Rules", "value": format_number(business_rules), "icon": "💡"},
+]
+render_kpi_row(kpis1)
 
-k1, k2, k3 = st.columns(3)
+kpis2 = [
+    {"title": "Customers", "value": format_number(customers), "icon": "👥"},
+    {"title": "High Risk Customers", "value": format_number(high_risk), "icon": "⚠️"},
+    {"title": "Inventory Products", "value": format_number(inventory_products), "icon": "📦"},
+]
+render_kpi_row(kpis2)
 
-k1.metric(
-    "Forecast Model",
-    best_model,
-)
-
-k2.metric(
-    "Forecast Days",
-    forecast_days,
-)
-
-k3.metric(
-    "Business Rules",
-    business_rules,
-)
-
-k4, k5, k6 = st.columns(3)
-
-k4.metric(
-    "Customers",
-    f"{customers:,}",
-)
-
-k5.metric(
-    "High Risk Customers",
-    f"{high_risk:,}",
-)
-
-k6.metric(
-    "Inventory Products",
-    f"{inventory_products:,}",
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Business Health
 # ==========================================================
-
-import plotly.express as px
-
 left_health, right_health = st.columns(2)
 
 with left_health:
-
-    st.subheader("📊 Business Module Coverage")
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("📊 Business Module Coverage")
 
     coverage_df = pd.DataFrame(
         {
@@ -179,19 +137,12 @@ with left_health:
         }
     )
 
-    fig_modules = px.bar(
+    fig_modules = create_bar_chart(
         coverage_df,
         x="Module",
         y="Records",
-        color="Records",
-        text_auto=True,
-        title="Business Data Coverage"
-    )
-
-    fig_modules.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
+        title="Business Data Coverage",
+        text_auto=True
     )
 
     st.plotly_chart(
@@ -199,24 +150,18 @@ with left_health:
         use_container_width=True,
         key="business_module_coverage"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with right_health:
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("📈 Forecast Model Performance")
 
-    st.subheader("📈 Forecast Model Performance")
-
-    fig_model = px.bar(
+    fig_model = create_bar_chart(
         model_df,
         x="Model",
         y="RMSE",
-        color="RMSE",
-        text_auto=".2f",
-        title="Forecast Model RMSE"
-    )
-
-    fig_model.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
+        title="Forecast Model RMSE",
+        text_auto=".2f"
     )
 
     st.plotly_chart(
@@ -224,18 +169,18 @@ with right_health:
         use_container_width=True,
         key="business_forecast_model"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Churn & Recommendation Summary
 # ==========================================================
-
 left_churn, right_recommendation = st.columns(2)
 
 with left_churn:
-
-    st.subheader("⚠️ Churn Summary")
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("⚠️ Churn Summary")
 
     churn_counts = (
         churn_df["PredictedChurn"]
@@ -249,18 +194,12 @@ with left_churn:
         "Customers",
     ]
 
-    fig_churn = px.pie(
+    fig_churn = create_pie_chart(
         churn_counts,
         names="Status",
         values="Customers",
-        hole=0.45,
-        title="Predicted Customer Churn"
-    )
-
-    fig_churn.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
+        title="Predicted Customer Churn",
+        hole=0.45
     )
 
     st.plotly_chart(
@@ -268,10 +207,11 @@ with left_churn:
         use_container_width=True,
         key="business_churn_summary"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with right_recommendation:
-
-    st.subheader("🎯 Customer Segments")
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("🎯 Customer Segments")
 
     segment_summary = (
         recommendation_df["Segment"]
@@ -284,19 +224,12 @@ with right_recommendation:
         "Customers",
     ]
 
-    fig_segments = px.bar(
+    fig_segments = create_bar_chart(
         segment_summary,
         x="Segment",
         y="Customers",
-        color="Customers",
-        text_auto=True,
-        title="Customer Segments"
-    )
-
-    fig_segments.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
+        title="Customer Segments",
+        text_auto=True
     )
 
     st.plotly_chart(
@@ -304,14 +237,15 @@ with right_recommendation:
         use_container_width=True,
         key="business_segment_summary"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Inventory Status Summary
 # ==========================================================
-
-st.subheader("📦 Inventory Status")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📦 Inventory Status")
 
 inventory_status = (
     inventory_df["InventoryStatus"]
@@ -324,19 +258,12 @@ inventory_status.columns = [
     "Products",
 ]
 
-fig_inventory = px.bar(
+fig_inventory = create_bar_chart(
     inventory_status,
     x="InventoryStatus",
     y="Products",
-    color="Products",
-    text_auto=True,
-    title="Inventory Status Distribution"
-)
-
-fig_inventory.update_layout(
-    template="plotly_white",
-    height=500,
-    title_x=0.5,
+    title="Inventory Status Distribution",
+    text_auto=True
 )
 
 st.plotly_chart(
@@ -344,28 +271,30 @@ st.plotly_chart(
     use_container_width=True,
     key="business_inventory_summary"
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Notebook Business Recommendations
 # ==========================================================
-
-st.subheader("💡 Notebook Generated Business Recommendations")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("💡 Notebook Generated Business Recommendations")
 
 st.dataframe(
     business_df,
     use_container_width=True,
     hide_index=True,
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Forecast Executive Summary
 # ==========================================================
-
-st.subheader("📈 Forecast Executive Summary")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📈 Forecast Executive Summary")
 
 forecast_summary = forecast_df.copy()
 
@@ -393,27 +322,22 @@ average_error = (
 forecast_left, forecast_right = st.columns(2)
 
 with forecast_left:
-
-    st.info(
+    info_banner(
         f"""
 ### Forecast Overview
 
 Total Actual Sales
-
-**{total_actual_sales:,.2f}**
+**{format_currency(total_actual_sales)}**
 
 Total Predicted Sales
-
-**{total_predicted_sales:,.2f}**
+**{format_currency(total_predicted_sales)}**
 
 Average Forecast Error
-
-**{average_error:.2f}**
+**{format_number(average_error)}**
 """
     )
 
 with forecast_right:
-
     best_rmse = (
         model_df["RMSE"].min()
     )
@@ -422,31 +346,29 @@ with forecast_right:
         model_df["MAE"].min()
     )
 
-    st.info(
+    info_banner(
         f"""
 ### Forecast Model
 
 Best Model
-
 **{best_model}**
 
 Lowest RMSE
-
-**{best_rmse:.2f}**
+**{format_number(best_rmse)}**
 
 Lowest MAE
-
-**{best_mae:.2f}**
+**{format_number(best_mae)}**
 """
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Cross Module Executive Summary
 # ==========================================================
-
-st.subheader("📊 Cross Module Summary")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📊 Cross Module Summary")
 
 summary_df = pd.DataFrame(
     {
@@ -457,10 +379,10 @@ summary_df = pd.DataFrame(
             "Recommendations",
         ],
         "Records": [
-            len(forecast_df),
-            len(churn_df),
-            len(inventory_df),
-            len(recommendation_df),
+            format_number(len(forecast_df)),
+            format_number(len(churn_df)),
+            format_number(len(inventory_df)),
+            format_number(len(recommendation_df)),
         ],
     }
 )
@@ -470,17 +392,17 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Downloads
 # ==========================================================
-
+st.markdown('<div class="rp-card rp-download-btn">', unsafe_allow_html=True)
 left_download, right_download = st.columns(2)
 
 with left_download:
-
     executive_csv = (
         summary_df
         .to_csv(index=False)
@@ -495,7 +417,6 @@ with left_download:
     )
 
 with right_download:
-
     recommendation_csv = (
         business_df
         .to_csv(index=False)
@@ -508,14 +429,15 @@ with right_download:
         file_name="business_recommendations.csv",
         mime="text/csv",
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Performance Scorecard
 # ==========================================================
-
-st.subheader("📈 Executive Performance Scorecard")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📈 Executive Performance Scorecard")
 
 scorecard = pd.DataFrame(
     {
@@ -527,9 +449,9 @@ scorecard = pd.DataFrame(
         ],
         "Key Metric": [
             best_model,
-            f"{high_risk:,} High Risk Customers",
-            f"{inventory_products:,} Products",
-            f"{recommended_customers:,} Customers",
+            f"{format_number(high_risk)} High Risk Customers",
+            f"{format_number(inventory_products)} Products",
+            f"{format_number(recommended_customers)} Customers",
         ],
         "Status": [
             "Operational",
@@ -545,16 +467,14 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Business Health Indicators
 # ==========================================================
-
-st.subheader("📊 Business Health Indicators")
-
-indicator1, indicator2, indicator3, indicator4 = st.columns(4)
+section_header("📊 Business Health Indicators")
 
 forecast_accuracy = (
     100
@@ -597,83 +517,64 @@ recommendation_coverage = (
     if customers > 0 else 0
 )
 
-indicator1.metric(
-    "Forecast Accuracy",
-    f"{forecast_accuracy:.1f}%"
-)
+kpis_health = [
+    {"title": "Forecast Accuracy", "value": format_percentage(forecast_accuracy), "icon": "🎯"},
+    {"title": "Churn Rate", "value": format_percentage(churn_rate), "icon": "⚠️"},
+    {"title": "Inventory Health", "value": format_percentage(inventory_health), "icon": "✅"},
+    {"title": "Recommendation Coverage", "value": format_percentage(recommendation_coverage), "icon": "👥"},
+]
+render_kpi_row(kpis_health)
 
-indicator2.metric(
-    "Churn Rate",
-    f"{churn_rate:.1f}%"
-)
-
-indicator3.metric(
-    "Inventory Health",
-    f"{inventory_health:.1f}%"
-)
-
-indicator4.metric(
-    "Recommendation Coverage",
-    f"{recommendation_coverage:.1f}%"
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Risk Dashboard
 # ==========================================================
-
-st.subheader("🚨 Executive Risk Dashboard")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🚨 Executive Risk Dashboard")
 
 risk_left, risk_right = st.columns(2)
 
 with risk_left:
-
-    st.warning(
+    warning_banner(
         f"""
 ### Business Risks
 
 • High Risk Customers
-
-**{high_risk:,}**
+**{format_number(high_risk)}**
 
 • Forecast Days
-
-**{forecast_days}**
+**{format_number(forecast_days)}**
 
 • Inventory Products
-
-**{inventory_products:,}**
+**{format_number(inventory_products)}**
 """
     )
 
 with risk_right:
-
-    st.success(
+    success_banner(
         f"""
 ### Business Strengths
 
 • Best Forecast Model
-
 **{best_model}**
 
 • Recommendation Records
-
-**{recommended_customers:,}**
+**{format_number(recommended_customers)}**
 
 • Business Recommendations
-
-**{business_rules}**
+**{format_number(business_rules)}**
 """
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Management Summary
 # ==========================================================
-
-st.subheader("📋 Management Summary")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📋 Management Summary")
 
 management_summary = pd.DataFrame(
     {
@@ -703,14 +604,15 @@ st.dataframe(
     use_container_width=True,
     hide_index=True,
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Action Plan
 # ==========================================================
-
-st.subheader("🎯 Executive Action Plan")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🎯 Executive Action Plan")
 
 action_plan = [
     "Continue using the best-performing forecasting model for demand planning.",
@@ -722,16 +624,17 @@ action_plan = [
 
 for i, action in enumerate(action_plan, start=1):
     st.write(f"{i}. {action}")
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # CEO Executive Summary
 # ==========================================================
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📊 CEO Executive Summary")
 
-st.subheader("📊 CEO Executive Summary")
-
-st.info(
+info_banner(
     f"""
 ### RetailPulse Executive Report
 
@@ -739,29 +642,30 @@ Forecasting Model
 **{best_model}**
 
 Forecast Period
-**{forecast_days} Days**
+**{format_number(forecast_days)} Days**
 
 Customers Analysed
-**{customers:,}**
+**{format_number(customers)}**
 
 Inventory Products
-**{inventory_products:,}**
+**{format_number(inventory_products)}**
 
 Recommendation Records
-**{recommended_customers:,}**
+**{format_number(recommended_customers)}**
 
 Business Recommendations
-**{business_rules}**
+**{format_number(business_rules)}**
 """
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Overall Business Health
 # ==========================================================
-
-st.subheader("🚦 Overall Business Health")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🚦 Overall Business Health")
 
 health_score = 0
 
@@ -794,23 +698,24 @@ else:
     health_score += 10
 
 if health_score >= 90:
-    st.success(f"Overall Business Health: Excellent ({health_score}/100)")
+    success_banner(f"Overall Business Health: Excellent ({health_score}/100)")
 elif health_score >= 75:
-    st.success(f"Overall Business Health: Good ({health_score}/100)")
+    success_banner(f"Overall Business Health: Good ({health_score}/100)")
 elif health_score >= 60:
-    st.warning(f"Overall Business Health: Moderate ({health_score}/100)")
+    warning_banner(f"Overall Business Health: Moderate ({health_score}/100)")
 else:
     st.error(f"Overall Business Health: Needs Attention ({health_score}/100)")
 
 st.progress(health_score / 100)
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Notes
 # ==========================================================
-
-st.subheader("📝 Executive Notes")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📝 Executive Notes")
 
 st.markdown(
     """
@@ -820,30 +725,11 @@ st.markdown(
 - Streamlit serves as the presentation and decision-support layer.
 """
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Footer
 # ==========================================================
-
-st.caption(
-    """
-RetailPulse
-
-Executive Business Intelligence Dashboard
-
-Notebook Outputs : Read Only
-
-Integrated Reports:
-• forecast_results.csv
-• forecasting_model_comparison.csv
-• high_risk_customers.csv
-• inventory_summary.csv
-• inventory_recommendations.csv
-• customer_product_recommendations.csv
-• business_recommendations.csv
-
-Version : 1.0
-"""
-)
+dashboard_footer()

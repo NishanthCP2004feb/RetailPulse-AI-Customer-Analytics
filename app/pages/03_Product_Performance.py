@@ -1,14 +1,40 @@
-# ==========================================================
-# Imports
-# ==========================================================
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from utils.theme import load_css
+from utils.theme import (
+    load_css, 
+    page_header, 
+    section_header, 
+    dashboard_divider, 
+    dashboard_footer,
+    kpi_card
+)
 from utils.data_loader import load_retail_data
+from utils.helpers import (
+    format_currency, 
+    format_number, 
+    format_percentage, 
+    format_compact_currency
+)
+from utils.metrics import (
+    get_product_kpis, 
+    get_total_revenue, 
+    get_total_products, 
+    get_total_quantity, 
+    get_average_order_value
+)
+from utils.chart_utils import (
+    create_bar_chart, 
+    create_horizontal_bar_chart, 
+    create_pie_chart, 
+    create_scatter_chart, 
+    create_histogram, 
+    create_line_chart, 
+    create_box_plot, 
+    apply_chart_layout
+)
 
 # ==========================================================
 # Page Configuration
@@ -26,10 +52,8 @@ load_css()
 # Page Header
 # ==========================================================
 
-st.title("📦 Product Performance")
-st.caption("RetailPulse • Product Performance Dashboard")
-
-st.markdown("---")
+page_header("📦 Product Performance", "RetailPulse • Product Revenue & Performance Analytics")
+dashboard_divider()
 
 # ==========================================================
 # Load Dataset
@@ -107,9 +131,7 @@ product_summary = (
 # ==========================================================
 
 total_products = product_summary.shape[0]
-
 total_revenue = product_summary["Revenue"].sum()
-
 total_quantity = product_summary["Quantity"].sum()
 
 average_product_revenue = (
@@ -117,57 +139,50 @@ average_product_revenue = (
     if total_products else 0
 )
 
-highest_revenue_product = (
-    product_summary.iloc[0]["ProductDescription"]
-)
-
-highest_quantity_product = (
-    product_summary
-    .sort_values("Quantity", ascending=False)
-    .iloc[0]["ProductDescription"]
-)
+if not product_summary.empty:
+    highest_revenue_product = product_summary.iloc[0]["ProductDescription"]
+    highest_quantity_product = (
+        product_summary
+        .sort_values("Quantity", ascending=False)
+        .iloc[0]["ProductDescription"]
+    )
+else:
+    highest_revenue_product = "N/A"
+    highest_quantity_product = "N/A"
 
 # ==========================================================
 # KPI Cards
 # ==========================================================
 
-st.subheader("📊 Product Overview")
+section_header("📊 Product Overview")
 
+st.markdown('<div class="rp-kpi-grid">', unsafe_allow_html=True)
 kpi1, kpi2, kpi3 = st.columns(3)
 
-kpi1.metric(
-    "Products",
-    f"{total_products:,}"
-)
+with kpi1:
+    st.markdown(kpi_card("Products", format_number(total_products), icon="📦", color="#2563EB"), unsafe_allow_html=True)
 
-kpi2.metric(
-    "Revenue",
-    f"£{total_revenue:,.2f}"
-)
+with kpi2:
+    st.markdown(kpi_card("Revenue", format_currency(total_revenue), icon="💰", color="#0EA5E9"), unsafe_allow_html=True)
 
-kpi3.metric(
-    "Quantity Sold",
-    f"{int(total_quantity):,}"
-)
+with kpi3:
+    st.markdown(kpi_card("Quantity Sold", format_number(int(total_quantity)), icon="📈", color="#22C55E"), unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
+st.markdown('<div class="rp-kpi-grid">', unsafe_allow_html=True)
 kpi4, kpi5, kpi6 = st.columns(3)
 
-kpi4.metric(
-    "Avg Product Revenue",
-    f"£{average_product_revenue:,.2f}"
-)
+with kpi4:
+    st.markdown(kpi_card("Avg Product Revenue", format_currency(average_product_revenue), icon="📊", color="#F59E0B"), unsafe_allow_html=True)
 
-kpi5.metric(
-    "Highest Revenue Product",
-    highest_revenue_product,
-)
+with kpi5:
+    st.markdown(kpi_card("Highest Revenue Product", highest_revenue_product, icon="⭐", color="#8B5CF6"), unsafe_allow_html=True)
 
-kpi6.metric(
-    "Highest Quantity Product",
-    highest_quantity_product,
-)
+with kpi6:
+    st.markdown(kpi_card("Highest Quantity Product", highest_quantity_product, icon="🏆", color="#EC4899"), unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Top Revenue & Quantity Charts
@@ -176,106 +191,84 @@ st.markdown("---")
 left_chart, right_chart = st.columns(2)
 
 with left_chart:
-
-    st.subheader("💰 Top 10 Products by Revenue")
-
-    top_revenue = (
-        product_summary
-        .head(10)
-    )
-
-    fig_top_revenue = px.bar(
-        top_revenue,
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("💰 Top 10 Products by Revenue")
+    
+    top_revenue = product_summary.head(10).sort_values("Revenue", ascending=True)
+    
+    fig_top_revenue = create_horizontal_bar_chart(
+        data=top_revenue,
         x="Revenue",
         y="ProductDescription",
-        orientation="h",
+        title="",
         color="Revenue",
-        title="Top Revenue Products",
-        text_auto=".2s",
+        text_auto=".2s"
     )
-
-    fig_top_revenue.update_layout(
-        template="plotly_white",
-        height=500,
-        title_x=0.5,
-        yaxis_title="",
-        xaxis_title="Revenue (£)",
-    )
-
+    
+    fig_top_revenue = apply_chart_layout(fig_top_revenue, height=500)
+    fig_top_revenue.update_layout(xaxis_title="Revenue (£)", yaxis_title="")
+    
     st.plotly_chart(
         fig_top_revenue,
         use_container_width=True,
-        key="top_revenue_products",
+        key="top_revenue_products_chart",
     )
-
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with right_chart:
-
-    st.subheader("📦 Top 10 Products by Quantity")
-
-    top_quantity = (
-        product_summary
-        .sort_values(
-            "Quantity",
-            ascending=False,
-        )
-        .head(10)
-    )
-
-    fig_top_quantity = px.bar(
-        top_quantity,
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("📦 Top 10 Products by Quantity")
+    
+    top_quantity = product_summary.sort_values("Quantity", ascending=False).head(10).sort_values("Quantity", ascending=True)
+    
+    fig_top_quantity = create_horizontal_bar_chart(
+        data=top_quantity,
         x="Quantity",
         y="ProductDescription",
-        orientation="h",
+        title="",
         color="Quantity",
-        title="Top Quantity Products",
-        text_auto=True,
+        text_auto=".2s"
     )
-
-    fig_top_quantity.update_layout(
-        template="plotly_white",
-        height=500,
-        title_x=0.5,
-        yaxis_title="",
-    )
-
+    
+    fig_top_quantity = apply_chart_layout(fig_top_quantity, height=500)
+    fig_top_quantity.update_layout(xaxis_title="Quantity", yaxis_title="")
+    
     st.plotly_chart(
         fig_top_quantity,
         use_container_width=True,
-        key="top_quantity_products",
+        key="top_quantity_products_chart",
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Revenue vs Quantity Analysis
 # ==========================================================
 
-st.subheader("📈 Revenue vs Quantity")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📈 Revenue vs Quantity")
 
-fig_scatter = px.scatter(
-    product_summary,
+fig_scatter = create_scatter_chart(
+    data=product_summary,
     x="Quantity",
     y="Revenue",
-    hover_name="ProductDescription",
-    size="Revenue",
+    title="",
     color="Revenue",
+    size="Revenue",
+    hover_name="ProductDescription"
 )
 
-fig_scatter.update_layout(
-    template="plotly_white",
-    height=600,
-    title="Revenue vs Quantity Sold",
-    title_x=0.5,
-)
+fig_scatter = apply_chart_layout(fig_scatter, height=600)
 
 st.plotly_chart(
     fig_scatter,
     use_container_width=True,
-    key="revenue_quantity_scatter",
+    key="revenue_quantity_scatter_chart",
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Revenue Distribution
@@ -284,61 +277,42 @@ st.markdown("---")
 left_hist, right_hist = st.columns(2)
 
 with left_hist:
-
-    st.subheader("📊 Revenue Distribution")
-
-    fig_histogram = px.histogram(
-        product_summary,
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("📊 Revenue Distribution")
+    
+    fig_histogram = create_histogram(
+        data=product_summary,
         x="Revenue",
-        nbins=40,
-        title="Revenue Distribution",
+        title="",
+        nbins=40
     )
-
-    fig_histogram.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
-    )
-
+    
+    fig_histogram = apply_chart_layout(fig_histogram, height=450)
+    
     st.plotly_chart(
         fig_histogram,
         use_container_width=True,
-        key="revenue_distribution",
+        key="revenue_distribution_chart",
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with right_hist:
-
-    st.subheader("📉 Pareto Analysis (80/20 Rule)")
-
-    pareto = (
-        product_summary
-        .sort_values(
-            "Revenue",
-            ascending=False,
-        )
-        .copy()
-    )
-
-    pareto["CumulativeRevenue"] = (
-        pareto["Revenue"].cumsum()
-    )
-
-    pareto["CumulativePercentage"] = (
-        pareto["CumulativeRevenue"]
-        / pareto["Revenue"].sum()
-        * 100
-    )
-
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("📉 Pareto Analysis (80/20 Rule)")
+    
+    pareto = product_summary.sort_values("Revenue", ascending=False).copy()
+    pareto["CumulativeRevenue"] = pareto["Revenue"].cumsum()
+    pareto["CumulativePercentage"] = pareto["CumulativeRevenue"] / pareto["Revenue"].sum() * 100
+    
     fig_pareto = go.Figure()
-
     fig_pareto.add_trace(
         go.Bar(
             x=pareto["ProductDescription"],
             y=pareto["Revenue"],
             name="Revenue",
+            marker_color="#2563EB"
         )
     )
-
     fig_pareto.add_trace(
         go.Scatter(
             x=pareto["ProductDescription"],
@@ -346,14 +320,12 @@ with right_hist:
             mode="lines",
             name="Cumulative %",
             yaxis="y2",
+            line=dict(color="#EF4444", width=3)
         )
     )
-
+    
+    fig_pareto = apply_chart_layout(fig_pareto, height=500)
     fig_pareto.update_layout(
-        template="plotly_white",
-        height=500,
-        title="Pareto Analysis",
-        title_x=0.5,
         xaxis=dict(showticklabels=False),
         yaxis=dict(title="Revenue (£)"),
         yaxis2=dict(
@@ -362,31 +334,34 @@ with right_hist:
             side="right",
             range=[0, 100],
         ),
+        showlegend=False
     )
-
+    
     st.plotly_chart(
         fig_pareto,
         use_container_width=True,
-        key="pareto_analysis",
+        key="pareto_analysis_chart",
     )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Product Search
 # ==========================================================
 
-st.subheader("🔍 Product Search")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🔍 Product Search")
 
 search_product = st.text_input(
     "Search Product",
-    placeholder="Type product name..."
+    placeholder="Type product name...",
+    key="product_search_input"
 )
 
 filtered_products = product_summary.copy()
 
 if search_product:
-
     filtered_products = filtered_products[
         filtered_products["ProductDescription"]
         .str.contains(
@@ -400,15 +375,9 @@ if search_product:
 # Product Performance Table
 # ==========================================================
 
-st.subheader("📋 Product Performance")
+section_header("📋 Product Performance")
 
-display_table = (
-    filtered_products
-    .sort_values(
-        "Revenue",
-        ascending=False,
-    )
-)
+display_table = filtered_products.sort_values("Revenue", ascending=False)
 
 st.dataframe(
     display_table,
@@ -420,157 +389,65 @@ st.dataframe(
 # Download Report
 # ==========================================================
 
-csv = (
-    display_table
-    .to_csv(index=False)
-    .encode("utf-8")
-)
+st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
+csv = display_table.to_csv(index=False).encode("utf-8")
 
 st.download_button(
     label="📥 Download Product Report",
     data=csv,
     file_name="product_performance.csv",
     mime="text/csv",
+    key="download_product_report"
 )
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Business Insights
 # ==========================================================
 
-highest_revenue = (
-    product_summary
-    .sort_values(
-        "Revenue",
-        ascending=False,
-    )
-    .iloc[0]
-)
-
-highest_quantity = (
-    product_summary
-    .sort_values(
-        "Quantity",
-        ascending=False,
-    )
-    .iloc[0]
-)
-
-average_price = (
-    product_summary["AveragePrice"]
-    .mean()
-)
-
-top10_revenue = (
-    product_summary
-    .head(10)["Revenue"]
-    .sum()
-)
-
-overall_revenue = (
-    product_summary["Revenue"]
-    .sum()
-)
-
-top10_percentage = (
-    top10_revenue
-    / overall_revenue
-    * 100
-)
-
-active_products = (
-    len(product_summary)
-)
+highest_revenue = product_summary.sort_values("Revenue", ascending=False).iloc[0] if not product_summary.empty else None
+highest_quantity = product_summary.sort_values("Quantity", ascending=False).iloc[0] if not product_summary.empty else None
+average_price = product_summary["AveragePrice"].mean() if not product_summary.empty else 0
+top10_revenue = product_summary.head(10)["Revenue"].sum() if not product_summary.empty else 0
+overall_revenue = product_summary["Revenue"].sum() if not product_summary.empty else 0
+top10_percentage = (top10_revenue / overall_revenue * 100) if overall_revenue > 0 else 0
+active_products = len(product_summary)
 
 left_info, right_info = st.columns(2)
 
 with left_info:
-
-    st.success(
-        f"""
-### 💰 Revenue Insights
-
-Highest Revenue Product
-
-**{highest_revenue['ProductDescription']}**
-
-Revenue
-
-**£{highest_revenue['Revenue']:,.2f}**
-
-Average Product Price
-
-**£{average_price:,.2f}**
-"""
-    )
+    with st.expander("💰 Revenue Insights", expanded=True):
+        st.write(f"**Highest Revenue Product:** {highest_revenue['ProductDescription'] if highest_revenue is not None else 'N/A'}")
+        st.write(f"**Revenue:** {format_currency(highest_revenue['Revenue'] if highest_revenue is not None else 0)}")
+        st.write(f"**Average Product Price:** {format_currency(average_price)}")
 
 with right_info:
+    with st.expander("📦 Product Insights", expanded=True):
+        st.write(f"**Highest Quantity Product:** {highest_quantity['ProductDescription'] if highest_quantity is not None else 'N/A'}")
+        st.write(f"**Units Sold:** {format_number(int(highest_quantity['Quantity']) if highest_quantity is not None else 0)}")
+        st.write(f"**Active Products:** {format_number(active_products)}")
+        st.write(f"**Top 10 Products contribute:** {format_percentage(top10_percentage)} of total revenue.")
 
-    st.success(
-        f"""
-### 📦 Product Insights
-
-Highest Quantity Product
-
-**{highest_quantity['ProductDescription']}**
-
-Units Sold
-
-**{int(highest_quantity['Quantity']):,}**
-
-Active Products
-
-**{active_products:,}**
-
-Top 10 Products contribute
-
-**{top10_percentage:.2f}%**
-
-of total revenue.
-"""
-    )
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Summary
 # ==========================================================
 
-st.info(
-    f"""
-### 📊 Executive Summary
+with st.expander("📊 Executive Summary", expanded=True):
+    st.write(f"• **Products Analysed:** {format_number(active_products)}")
+    st.write(f"• **Revenue Generated:** {format_currency(overall_revenue)}")
+    st.write(f"• **Units Sold:** {format_number(int(total_quantity))}")
+    st.write(f"• **Average Product Revenue:** {format_currency(average_product_revenue)}")
+    st.write(f"• **Top Product:** {highest_revenue['ProductDescription'] if highest_revenue is not None else 'N/A'}")
 
-• Products Analysed : **{active_products:,}**
-
-• Revenue Generated : **£{overall_revenue:,.2f}**
-
-• Units Sold : **{int(total_quantity):,}**
-
-• Average Product Revenue :
-**£{average_product_revenue:,.2f}**
-
-• Top Product :
-**{highest_revenue['ProductDescription']}**
-"""
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Footer
 # ==========================================================
 
-st.caption(
-    """
-RetailPulse
-
-Product Performance Dashboard
-
-Notebook Outputs : Read Only
-
-Dataset : retail_cleaned.csv
-
-Version : 1.0
-"""
-)
+dashboard_footer()

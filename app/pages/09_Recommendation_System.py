@@ -1,12 +1,26 @@
-# ==========================================================
-# Imports
-# ==========================================================
-
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
-from utils.theme import load_css
+from utils.theme import (
+    load_css, 
+    page_header, 
+    section_header, 
+    dashboard_divider, 
+    dashboard_footer, 
+    render_kpi_row, 
+    render_insight_card, 
+    success_banner
+)
+from utils.data_loader import load_recommendations
+from utils.helpers import format_number, format_percentage, safe_value
+from utils.metrics import get_recommendation_kpis
+from utils.chart_utils import (
+    create_bar_chart, 
+    create_horizontal_bar_chart, 
+    create_pie_chart, 
+    create_histogram, 
+    apply_chart_layout
+)
 
 # ==========================================================
 # Page Configuration
@@ -24,24 +38,13 @@ load_css()
 # Header
 # ==========================================================
 
-st.title("🎯 Product Recommendation System")
+page_header('🎯 Recommendation System', 'RetailPulse • Personalized Product Recommendations')
 
-st.caption(
-    "RetailPulse • Personalized Product Recommendations"
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Load Recommendation Report
 # ==========================================================
-
-@st.cache_data
-def load_recommendations():
-
-    return pd.read_csv(
-        "reports/customer_product_recommendations.csv"
-    )
 
 df = load_recommendations()
 
@@ -55,9 +58,7 @@ if df.empty:
 
 st.sidebar.header("🎯 Recommendation Filters")
 
-segments = sorted(
-    df["Segment"].dropna().unique()
-)
+segments = sorted(df["Segment"].dropna().unique())
 
 selected_segments = st.sidebar.multiselect(
     "Customer Segment",
@@ -65,9 +66,7 @@ selected_segments = st.sidebar.multiselect(
     default=segments,
 )
 
-filtered_df = df[
-    df["Segment"].isin(selected_segments)
-]
+filtered_df = df[df["Segment"].isin(selected_segments)].copy()
 
 if filtered_df.empty:
     st.warning("No recommendations found.")
@@ -77,154 +76,85 @@ if filtered_df.empty:
 # KPI Calculations
 # ==========================================================
 
-total_customers = len(filtered_df)
-
-total_segments = (
-    filtered_df["Segment"]
-    .nunique()
-)
-
-average_products = (
+filtered_df["RecommendationCount"] = (
     filtered_df["RecommendedProducts"]
     .fillna("")
     .str.split(",")
     .apply(len)
-    .mean()
 )
 
-largest_segment = (
-    filtered_df["Segment"]
-    .value_counts()
-    .idxmax()
-)
+total_customers = len(filtered_df)
+total_segments = filtered_df["Segment"].nunique()
+average_products = filtered_df["RecommendationCount"].mean()
 
-largest_segment_count = (
-    filtered_df["Segment"]
-    .value_counts()
-    .max()
-)
+largest_segment = filtered_df["Segment"].value_counts().idxmax() if not filtered_df.empty else "-"
+largest_segment_count = filtered_df["Segment"].value_counts().max() if not filtered_df.empty else 0
 
 # ==========================================================
 # KPI Cards
 # ==========================================================
 
-st.subheader("📊 Recommendation Overview")
+section_header("📊 Recommendation Overview")
 
-k1, k2, k3 = st.columns(3)
+kpis_row_1 = [
+    {"title": "Customers", "value": format_number(total_customers), "icon": "👥", "color": "#2563EB"},
+    {"title": "Segments", "value": format_number(total_segments), "icon": "🏷️", "color": "#0EA5E9"},
+    {"title": "Avg Recommendations", "value": f"{average_products:.1f}", "icon": "📦", "color": "#22C55E"}
+]
+render_kpi_row(kpis_row_1)
 
-k1.metric(
-    "Customers",
-    f"{total_customers:,}"
-)
+kpis_row_2 = [
+    {"title": "Largest Segment", "value": largest_segment, "icon": "👑", "color": "#F59E0B"},
+    {"title": "Customers in Segment", "value": format_number(largest_segment_count), "icon": "📊", "color": "#8B5CF6"},
+    {"title": "Recommendation Rows", "value": format_number(len(filtered_df)), "icon": "📝", "color": "#6366F1"}
+]
+render_kpi_row(kpis_row_2)
 
-k2.metric(
-    "Segments",
-    total_segments
-)
-
-k3.metric(
-    "Avg Recommendations",
-    f"{average_products:.1f}"
-)
-
-k4, k5, k6 = st.columns(3)
-
-k4.metric(
-    "Largest Segment",
-    largest_segment
-)
-
-k5.metric(
-    "Customers in Segment",
-    f"{largest_segment_count:,}"
-)
-
-k6.metric(
-    "Recommendation Rows",
-    f"{len(filtered_df):,}"
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Customer Segment Distribution
 # ==========================================================
 
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 left_chart, right_chart = st.columns(2)
 
 with left_chart:
-
-    st.subheader("👥 Customer Segment Distribution")
-
-    segment_distribution = (
-        filtered_df["Segment"]
-        .value_counts()
-        .reset_index()
-    )
-
-    segment_distribution.columns = [
-        "Segment",
-        "Customers",
-    ]
-
-    fig_segment_distribution = px.pie(
+    section_header("👥 Customer Segment Distribution")
+    
+    segment_distribution = filtered_df["Segment"].value_counts().reset_index()
+    segment_distribution.columns = ["Segment", "Customers"]
+    
+    fig_segment_distribution = create_pie_chart(
         segment_distribution,
         names="Segment",
         values="Customers",
-        hole=0.45,
-        title="Customer Segments"
+        title="Customer Segments",
+        hole=0.45
     )
-
-    fig_segment_distribution.update_layout(
-        template="plotly_white",
-        height=500,
-        title_x=0.5,
-    )
-
-    st.plotly_chart(
-        fig_segment_distribution,
-        use_container_width=True,
-        key="recommendation_segment_distribution"
-    )
-
-# ==========================================================
-# Recommendations by Segment
-# ==========================================================
+    st.plotly_chart(fig_segment_distribution, use_container_width=True, key="recommendation_segment_distribution")
 
 with right_chart:
-
-    st.subheader("📊 Customers per Segment")
-
-    fig_segment_bar = px.bar(
+    section_header("📊 Customers per Segment")
+    
+    fig_segment_bar = create_bar_chart(
         segment_distribution,
         x="Segment",
         y="Customers",
         color="Customers",
-        text_auto=True,
         title="Segment Size"
     )
+    st.plotly_chart(fig_segment_bar, use_container_width=True, key="segment_bar_chart")
+st.markdown('</div>', unsafe_allow_html=True)
 
-    fig_segment_bar.update_layout(
-        template="plotly_white",
-        height=500,
-        title_x=0.5,
-        xaxis_title="Segment",
-        yaxis_title="Customers"
-    )
-
-    st.plotly_chart(
-        fig_segment_bar,
-        use_container_width=True,
-        key="segment_bar_chart"
-    )
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Most Recommended Products
 # ==========================================================
 
-st.subheader("📦 Most Frequently Recommended Products")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📦 Most Frequently Recommended Products")
 
 product_list = (
     filtered_df["RecommendedProducts"]
@@ -233,136 +163,86 @@ product_list = (
     .explode()
     .str.strip()
 )
+top_products = product_list.value_counts().head(15).reset_index()
+top_products.columns = ["Product", "Recommendations"]
 
-top_products = (
-    product_list
-    .value_counts()
-    .head(15)
-    .reset_index()
-)
-
-top_products.columns = [
-    "Product",
-    "Recommendations",
-]
-
-fig_top_products = px.bar(
+fig_top_products = create_horizontal_bar_chart(
     top_products,
     x="Recommendations",
     y="Product",
-    orientation="h",
     color="Recommendations",
-    text_auto=True,
     title="Top Recommended Products"
 )
+st.plotly_chart(fig_top_products, use_container_width=True, key="top_recommended_products")
+st.markdown('</div>', unsafe_allow_html=True)
 
-fig_top_products.update_layout(
-    template="plotly_white",
-    height=600,
-    title_x=0.5,
-    yaxis_title="",
-)
-
-st.plotly_chart(
-    fig_top_products,
-    use_container_width=True,
-    key="top_recommended_products"
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Recommendation Explorer
 # ==========================================================
 
-st.subheader("🔍 Recommendation Explorer")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🔍 Recommendation Explorer")
 
 selected_segment = st.selectbox(
     "Choose Customer Segment",
-    sorted(filtered_df["Segment"].unique())
+    sorted(filtered_df["Segment"].unique()),
+    key="explorer_segment_select"
 )
+segment_df = filtered_df[filtered_df["Segment"] == selected_segment]
 
-segment_df = (
-    filtered_df[
-        filtered_df["Segment"] == selected_segment
-    ]
-)
+st.dataframe(segment_df, use_container_width=True, hide_index=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.dataframe(
-    segment_df,
-    use_container_width=True,
-    hide_index=True,
-)
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Customer Search
 # ==========================================================
 
-st.subheader("🔍 Customer Recommendation Search")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("🔍 Customer Recommendation Search")
 
 search_customer = st.text_input(
     "Search Customer ID",
-    placeholder="Enter Customer ID..."
+    placeholder="Enter Customer ID...",
+    key="customer_search_input"
 )
 
 display_df = filtered_df.copy()
 
 if search_customer:
-
     display_df = display_df[
         display_df["CustomerID"]
         .astype(str)
-        .str.contains(
-            search_customer,
-            case=False,
-            na=False,
-        )
+        .str.contains(search_customer, case=False, na=False)
     ]
+st.markdown('</div>', unsafe_allow_html=True)
+
+dashboard_divider()
 
 # ==========================================================
 # Recommendation Coverage Analysis
 # ==========================================================
 
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 left_analysis, right_analysis = st.columns(2)
 
 with left_analysis:
-
-    st.subheader("📈 Recommendation Coverage")
-
-    display_df["RecommendationCount"] = (
-        display_df["RecommendedProducts"]
-        .fillna("")
-        .str.split(",")
-        .apply(len)
-    )
-
-    fig_recommendation_count = px.histogram(
+    section_header("📈 Recommendation Coverage")
+    
+    fig_recommendation_count = create_histogram(
         display_df,
         x="RecommendationCount",
         nbins=15,
         title="Recommendations per Customer"
     )
-
-    fig_recommendation_count.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
-        xaxis_title="Recommendations",
-        yaxis_title="Customers"
-    )
-
-    st.plotly_chart(
-        fig_recommendation_count,
-        use_container_width=True,
-        key="recommendation_count_chart"
-    )
+    st.plotly_chart(fig_recommendation_count, use_container_width=True, key="recommendation_count_chart")
 
 with right_analysis:
-
-    st.subheader("📊 Segment Recommendation Coverage")
-
+    section_header("📊 Segment Recommendation Coverage")
+    
     segment_summary = (
         display_df
         .groupby("Segment", as_index=False)
@@ -371,53 +251,43 @@ with right_analysis:
             AvgRecommendations=("RecommendationCount", "mean"),
         )
     )
-
-    fig_segment_summary = px.bar(
+    
+    fig_segment_summary = create_bar_chart(
         segment_summary,
         x="Segment",
         y="AvgRecommendations",
         color="Customers",
-        text_auto=".1f",
         title="Average Recommendations by Segment"
     )
+    st.plotly_chart(fig_segment_summary, use_container_width=True, key="segment_recommendation_summary")
+st.markdown('</div>', unsafe_allow_html=True)
 
-    fig_segment_summary.update_layout(
-        template="plotly_white",
-        height=450,
-        title_x=0.5,
-    )
-
-    st.plotly_chart(
-        fig_segment_summary,
-        use_container_width=True,
-        key="segment_recommendation_summary"
-    )
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Recommendation Table
 # ==========================================================
 
-st.subheader("📋 Customer Recommendations")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("📋 Customer Recommendations")
 
 st.dataframe(
-    display_df.sort_values(
-        "Segment"
-    ),
+    display_df.sort_values("Segment"),
     use_container_width=True,
     hide_index=True,
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Download Recommendation Report
 # ==========================================================
 
+st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
 recommendation_csv = (
     display_df
-    .drop(columns=["RecommendationCount"])
+    .drop(columns=["RecommendationCount"], errors="ignore")
     .to_csv(index=False)
     .encode("utf-8")
 )
@@ -427,207 +297,127 @@ st.download_button(
     data=recommendation_csv,
     file_name="customer_product_recommendations.csv",
     mime="text/csv",
+    key="download_btn_recommendations"
 )
+st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Recommendation Insights
 # ==========================================================
 
-largest_segment = (
-    display_df["Segment"]
-    .value_counts()
-    .idxmax()
-)
-
-largest_segment_size = (
-    display_df["Segment"]
-    .value_counts()
-    .max()
-)
-
-average_recommendations = (
-    display_df["RecommendationCount"]
-    .mean()
-)
-
-most_recommended = (
-    top_products.iloc[0]
-)
+largest_segment_display = display_df["Segment"].value_counts().idxmax() if not display_df.empty else "-"
+largest_segment_size = display_df["Segment"].value_counts().max() if not display_df.empty else 0
+average_recommendations = display_df["RecommendationCount"].mean() if not display_df.empty else 0
+most_recommended = top_products.iloc[0] if not top_products.empty else pd.Series({"Product": "-", "Recommendations": 0})
 
 left_info, right_info = st.columns(2)
 
 with left_info:
-
-    st.success(
+    render_insight_card(
+        "🎯 Segment Insights",
         f"""
-### 🎯 Segment Insights
-
-Largest Customer Segment
-
-**{largest_segment}**
-
-Customers
-
-**{largest_segment_size:,}**
-
-Average Recommendations
-
-**{average_recommendations:.2f}**
-"""
+        **Largest Customer Segment:** {largest_segment_display}
+        
+        **Customers:** {format_number(largest_segment_size)}
+        
+        **Average Recommendations:** {average_recommendations:.2f}
+        """
     )
 
 with right_info:
-
-    st.success(
+    render_insight_card(
+        "📦 Product Insights",
         f"""
-### 📦 Product Insights
-
-Most Recommended Product
-
-**{most_recommended['Product']}**
-
-Recommendation Count
-
-**{most_recommended['Recommendations']}**
-
-Active Segments
-
-**{total_segments}**
-"""
+        **Most Recommended Product:** {most_recommended['Product']}
+        
+        **Recommendation Count:** {format_number(most_recommended['Recommendations'])}
+        
+        **Active Segments:** {total_segments}
+        """
     )
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Executive Recommendation Summary
 # ==========================================================
 
-st.subheader("📊 Executive Recommendation Summary")
+section_header("📊 Executive Recommendation Summary")
 
-total_recommendations = (
-    display_df["RecommendationCount"]
-    .sum()
-)
+total_recommendations = display_df["RecommendationCount"].sum() if not display_df.empty else 0
 
 summary_left, summary_right = st.columns(2)
 
 with summary_left:
-
     st.info(
         f"""
-### 👥 Customer Recommendation Overview
-
-Customers Analysed
-
-**{total_customers:,}**
-
-Customer Segments
-
-**{total_segments}**
-
-Total Recommendations
-
-**{int(total_recommendations):,}**
-"""
+        ### 👥 Customer Recommendation Overview
+        * **Customers Analysed:** {format_number(total_customers)}
+        * **Customer Segments:** {format_number(total_segments)}
+        * **Total Recommendations:** {format_number(int(total_recommendations))}
+        """
     )
 
 with summary_right:
-
     st.info(
         f"""
-### 🎯 Recommendation Performance
-
-Average Recommendations
-
-**{average_recommendations:.2f}**
-
-Largest Segment
-
-**{largest_segment}**
-
-Customers in Largest Segment
-
-**{largest_segment_size:,}**
-"""
+        ### 🎯 Recommendation Performance
+        * **Average Recommendations:** {average_recommendations:.2f}
+        * **Largest Segment:** {largest_segment_display}
+        * **Customers in Largest Segment:** {format_number(largest_segment_size)}
+        """
     )
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Business Recommendations
 # ==========================================================
 
-st.subheader("💡 Business Recommendations")
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("💡 Business Recommendations")
 
-recommendations = []
+with st.expander("View Business Recommendations", expanded=True):
+    recommendations = []
 
-if average_recommendations >= 5:
-    recommendations.append(
-        "Customers receive multiple product recommendations, enabling broader cross-selling opportunities."
-    )
-elif average_recommendations >= 3:
-    recommendations.append(
-        "Recommendation coverage is balanced and suitable for personalized marketing."
-    )
-else:
-    recommendations.append(
-        "Consider improving recommendation diversity during future notebook retraining."
-    )
+    if average_recommendations >= 5:
+        recommendations.append("Customers receive multiple product recommendations, enabling broader cross-selling opportunities.")
+    elif average_recommendations >= 3:
+        recommendations.append("Recommendation coverage is balanced and suitable for personalized marketing.")
+    else:
+        recommendations.append("Consider improving recommendation diversity during future notebook retraining.")
 
-recommendations.append(
-    f"Focus promotional campaigns on the '{largest_segment}' customer segment because it contains the largest customer base."
-)
+    recommendations.append(f"Focus promotional campaigns on the '{largest_segment_display}' customer segment because it contains the largest customer base.")
+    recommendations.append(f"Use '{most_recommended['Product']}' as a featured recommendation in marketing campaigns.")
+    recommendations.append("Recommendation logic should remain notebook-driven. The Streamlit dashboard should only visualize exported results.")
 
-recommendations.append(
-    f"Use '{most_recommended['Product']}' as a featured recommendation in marketing campaigns."
-)
+    for i, recommendation in enumerate(recommendations, start=1):
+        st.write(f"{i}. {recommendation}")
+st.markdown('</div>', unsafe_allow_html=True)
 
-recommendations.append(
-    "Recommendation logic should remain notebook-driven. The Streamlit dashboard should only visualize exported results."
-)
-
-for i, recommendation in enumerate(recommendations, start=1):
-    st.write(f"{i}. {recommendation}")
-
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Recommendation System Health
 # ==========================================================
 
-st.subheader("🚦 Recommendation System Health")
+section_header("🚦 Recommendation System Health")
 
 if average_recommendations >= 5:
-    st.success("Recommendation Health: Excellent")
-
+    success_banner("Recommendation Health: Excellent")
 elif average_recommendations >= 3:
-    st.success("Recommendation Health: Good")
-
+    success_banner("Recommendation Health: Good")
 elif average_recommendations >= 2:
     st.warning("Recommendation Health: Moderate")
-
 else:
     st.error("Recommendation Health: Needs Improvement")
 
-st.markdown("---")
+dashboard_divider()
 
 # ==========================================================
 # Footer
 # ==========================================================
 
-st.caption(
-    """
-RetailPulse
-
-Recommendation System Dashboard
-
-Notebook Outputs : Read Only
-
-Report:
-customer_product_recommendations.csv
-
-Version : 1.0
-"""
-)
+dashboard_footer()

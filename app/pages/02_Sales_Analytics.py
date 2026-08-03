@@ -1,326 +1,266 @@
 import streamlit as st
-import plotly.express as px
 import pandas as pd
+import plotly.express as px
 
-from utils.chart_utils import create_monthly_sales_chart
-from utils.theme import load_css
+# ==========================================================
+# Utilities
+# ==========================================================
+from utils.theme import (
+    load_css, 
+    page_header, 
+    section_header, 
+    dashboard_divider, 
+    dashboard_footer, 
+    render_kpi_row, 
+    render_insight_card
+)
 from utils.data_loader import load_retail_data
-from utils.metrics import get_basic_kpis
+from utils.helpers import (
+    format_currency, 
+    format_number, 
+    format_percentage, 
+    format_compact_currency
+)
+from utils.metrics import (
+    get_sales_kpis, 
+    get_total_revenue, 
+    get_total_orders, 
+    get_total_customers, 
+    get_total_products, 
+    get_total_quantity, 
+    get_average_order_value
+)
+from utils.chart_utils import (
+    create_monthly_sales_chart, 
+    create_top_products_chart, 
+    create_country_sales_chart, 
+    create_bar_chart, 
+    create_line_chart, 
+    create_scatter_chart, 
+    create_histogram, 
+    create_pie_chart, 
+    apply_chart_layout
+)
 
-# --------------------------------------------------
-# Page Configuration
-# --------------------------------------------------
+# ==========================================================
+# Page Config
+# ==========================================================
 st.set_page_config(
     page_title="Sales Analytics",
     page_icon="📈",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 load_css()
 
-st.title("📈 Sales Analytics")
-st.caption("RetailPulse • Sales Performance Dashboard")
+# ==========================================================
+# Header
+# ==========================================================
+page_header(
+    '📈 Sales Analytics', 
+    'RetailPulse • Sales Performance & Revenue Analysis'
+)
 
-st.markdown("---")
-
-# --------------------------------------------------
-# Load Data
-# --------------------------------------------------
+# ==========================================================
+# Load Dataset
+# ==========================================================
 df = load_retail_data()
 
-# --------------------------------------------------
+if df.empty:
+    st.error("Retail dataset not found.")
+    st.stop()
+
+# ==========================================================
 # Sidebar Filters
-# --------------------------------------------------
-st.sidebar.header("Filters")
+# ==========================================================
+st.sidebar.header("🎛 Sales Filters")
 
-selected_country = st.sidebar.selectbox(
+# Handle missing or empty lists for filters
+countries = sorted(df["Country"].dropna().unique())
+selected_country = st.sidebar.multiselect(
     "Country",
-    ["All"] + sorted(df["Country"].dropna().unique().tolist())
+    countries,
+    default=countries,
 )
 
-if selected_country != "All":
-    df = df[df["Country"] == selected_country]
-
-# --------------------------------------------------
-# KPIs
-# --------------------------------------------------
-kpis = get_basic_kpis(df)
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("Revenue", f"£{kpis['Total Revenue']:,.2f}")
-col2.metric("Orders", f"{kpis['Orders']:,}")
-col3.metric("Customers", f"{kpis['Customers']:,}")
-col4.metric("Products", f"{kpis['Products']:,}")
-
-st.markdown("---")
-
-st.subheader("Monthly Revenue Trend")
-
-st.plotly_chart(
-    create_monthly_sales_chart(df),
-    use_container_width=True,
+years = sorted(df["InvoiceYear"].dropna().unique())
+selected_year = st.sidebar.multiselect(
+    "Invoice Year",
+    years,
+    default=years,
 )
 
-monthly_orders = (
-    df.groupby("InvoiceMonthYear", as_index=False)["InvoiceID"]
-      .nunique()
-      .sort_values("InvoiceMonthYear")
+months = sorted(df["MonthName"].dropna().unique())
+selected_month = st.sidebar.multiselect(
+    "Month",
+    months,
+    default=months,
 )
 
-fig = px.line(
-    monthly_orders,
-    x="InvoiceMonthYear",
-    y="InvoiceID",
-    markers=True,
-    title="Monthly Orders"
-)
-
-fig.update_layout(
-    template="plotly_white",
-    height=450,
-    title_x=0.5,
-)
-
-st.markdown("---")
-st.subheader("🌍 Revenue by Country")
-
-country_sales = (
-    df.groupby("Country", as_index=False)["TotalAmount"]
-      .sum()
-      .sort_values("TotalAmount", ascending=False)
-      .head(10)
-)
-
-fig_country = px.bar(
-    country_sales,
-    x="TotalAmount",
-    y="Country",
-    orientation="h",
-    title="Top 10 Countries by Revenue",
-    labels={
-        "TotalAmount": "Revenue (£)",
-        "Country": "Country"
-    }
-)
-
-fig_country.update_layout(
-    template="plotly_white",
-    height=450,
-    title_x=0.5
-)
-
-st.plotly_chart(
-    fig_country,
-    use_container_width=True
-)
-
-st.subheader("📅 Revenue by Weekday")
-
-weekday_order = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
+filtered_df = df[
+    (df["Country"].isin(selected_country)) &
+    (df["InvoiceYear"].isin(selected_year)) &
+    (df["MonthName"].isin(selected_month))
 ]
 
-weekday_sales = (
-    df.groupby("DayName", as_index=False)["TotalAmount"]
-      .sum()
-)
+if filtered_df.empty:
+    st.warning("No data available for selected filters.")
+    st.stop()
 
-weekday_sales["DayName"] = pd.Categorical(
-    weekday_sales["DayName"],
-    categories=weekday_order,
-    ordered=True
-)
+# ==========================================================
+# KPI Row
+# ==========================================================
+sales_kpis = get_sales_kpis(filtered_df)
 
-weekday_sales = weekday_sales.sort_values("DayName")
+revenue = get_total_revenue(filtered_df)
+orders = get_total_orders(filtered_df)
+aov = get_average_order_value(filtered_df)
+quantity = get_total_quantity(filtered_df)
+products = get_total_products(filtered_df)
+customers = get_total_customers(filtered_df)
 
-fig_weekday = px.bar(
-    weekday_sales,
-    x="DayName",
-    y="TotalAmount",
-    title="Revenue by Weekday"
-)
-
-fig_weekday.update_layout(
-    template="plotly_white",
-    height=450,
-    title_x=0.5
-)
-
-st.plotly_chart(
-    fig_weekday,
-    use_container_width=True
-)
-
-st.subheader("🕒 Hourly Revenue")
-
-hourly_sales = (
-    df.groupby("InvoiceHour", as_index=False)["TotalAmount"]
-      .sum()
-)
-
-fig_hour = px.line(
-    hourly_sales,
-    x="InvoiceHour",
-    y="TotalAmount",
-    markers=True,
-    title="Revenue by Hour"
-)
-
-fig_hour.update_layout(
-    template="plotly_white",
-    height=450,
-    title_x=0.5
-)
-
-st.plotly_chart(
-    fig_hour,
-    use_container_width=True
-)
-
-st.subheader("🏆 Top Selling Products")
-
-top_products = (
-    df.groupby("ProductDescription", as_index=False)
-      .agg(
-          Revenue=("TotalAmount", "sum"),
-          Quantity=("Quantity", "sum")
-      )
-      .sort_values("Revenue", ascending=False)
-      .head(10)
-)
-
-fig_products = px.bar(
-    top_products,
-    x="Revenue",
-    y="ProductDescription",
-    orientation="h",
-    title="Top 10 Products by Revenue"
-)
-
-fig_products.update_layout(
-    template="plotly_white",
-    height=500,
-    title_x=0.5
-)
-
-st.plotly_chart(
-    fig_products,
-    use_container_width=True
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("---")
-st.subheader("📋 Sales Transactions")
-
-display_columns = [
-    "InvoiceID",
-    "InvoiceDate",
-    "CustomerID",
-    "Country",
-    "ProductDescription",
-    "Quantity",
-    "UnitPrice",
-    "TotalAmount",
+kpi_data = [
+    {"title": "Total Revenue", "value": format_currency(revenue), "icon": "💰", "color": "#2563EB"},
+    {"title": "Total Orders", "value": format_number(orders), "icon": "🛒", "color": "#0EA5E9"},
+    {"title": "Average Order Value", "value": format_currency(aov), "icon": "💳", "color": "#22C55E"},
+    {"title": "Total Quantity", "value": format_number(quantity), "icon": "📦", "color": "#F59E0B"},
+    {"title": "Unique Products", "value": format_number(products), "icon": "🏷️", "color": "#EF4444"},
+    {"title": "Unique Customers", "value": format_number(customers), "icon": "👥", "color": "#06B6D4"}
 ]
 
-st.dataframe(
-    df[display_columns],
-    use_container_width=True,
-    hide_index=True,
-)
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+render_kpi_row(kpi_data)
+st.markdown('</div>', unsafe_allow_html=True)
+dashboard_divider()
 
-csv = df.to_csv(index=False).encode("utf-8")
-
-st.download_button(
-    label="📥 Download Filtered Sales Data",
-    data=csv,
-    file_name="sales_analytics.csv",
-    mime="text/csv",
-)
-
-st.markdown("---")
-st.subheader("📌 Business Summary")
-
-highest_country = (
-    df.groupby("Country")["TotalAmount"]
-    .sum()
-    .idxmax()
-)
-
-highest_product = (
-    df.groupby("ProductDescription")["TotalAmount"]
-    .sum()
-    .idxmax()
-)
-
-highest_month = (
-    df.groupby("MonthName")["TotalAmount"]
-    .sum()
-    .idxmax()
-)
-
-avg_order = (
-    df["TotalAmount"].sum()
-    / df["InvoiceID"].nunique()
-)
-
-avg_basket = df["BasketSize"].mean()
-
-weekend_sales = (
-    df[df["IsWeekend"]]["TotalAmount"].sum()
-)
-
-total_sales = df["TotalAmount"].sum()
-
-weekend_percentage = (
-    weekend_sales / total_sales * 100
-)
-
+# ==========================================================
+# Charts - Row 1
+# ==========================================================
 col1, col2 = st.columns(2)
 
 with col1:
-    st.info(f"""
-### 📊 Revenue Insights
-
-• Highest Revenue Country: **{highest_country}**
-
-• Highest Revenue Month: **{highest_month}**
-
-• Average Order Value: **£{avg_order:,.2f}**
-""")
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Monthly Revenue Trend")
+    monthly_sales_fig = create_monthly_sales_chart(filtered_df)
+    st.plotly_chart(monthly_sales_fig, use_container_width=True, key="monthly_revenue")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    st.info(f"""
-### 🛒 Product Insights
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Revenue by Country (Top 10)")
+    country_sales_fig = create_country_sales_chart(filtered_df, top_n=10)
+    st.plotly_chart(country_sales_fig, use_container_width=True, key="country_sales")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-• Top Product: **{highest_product}**
+# ==========================================================
+# Charts - Row 2
+# ==========================================================
+col3, col4 = st.columns(2)
 
-• Average Basket Size: **{avg_basket:.2f}**
+with col3:
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Top 10 Products by Revenue")
+    top_products_fig = create_top_products_chart(filtered_df, top_n=10)
+    st.plotly_chart(top_products_fig, use_container_width=True, key="top_products")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-• Weekend Sales: **{weekend_percentage:.2f}%**
-""")
+with col4:
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Revenue by Day of Week")
+    dow_revenue = filtered_df.groupby("DayName", as_index=False)["TotalAmount"].sum()
+    dow_revenue = dow_revenue.sort_values("TotalAmount", ascending=False)
+    dow_fig = create_bar_chart(dow_revenue, x="DayName", y="TotalAmount", title="Revenue by Day of Week")
+    st.plotly_chart(dow_fig, use_container_width=True, key="dow_revenue")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("---")
+# ==========================================================
+# Charts - Row 3
+# ==========================================================
+col5, col6 = st.columns(2)
 
-st.caption(
-    """
-RetailPulse • Sales Analytics Dashboard
+with col5:
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Revenue Distribution")
+    dist_fig = create_histogram(filtered_df, x="TotalAmount", title="Revenue Distribution", nbins=50)
+    st.plotly_chart(dist_fig, use_container_width=True, key="revenue_dist")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-Data Source:
-Processed Retail Dataset
+with col6:
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    section_header("Monthly Orders Trend")
+    monthly_orders = filtered_df.groupby("InvoiceMonthYear", as_index=False)["InvoiceID"].nunique()
+    # To maintain temporal order, sort by the actual date proxy if possible, or just plot as is assuming it's pre-sorted
+    monthly_orders_fig = create_line_chart(monthly_orders, x="InvoiceMonthYear", y="InvoiceID", title="Monthly Orders Trend", markers=True)
+    st.plotly_chart(monthly_orders_fig, use_container_width=True, key="monthly_orders")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-Notebook Outputs:
-Read-only
+# ==========================================================
+# Charts - Row 4
+# ==========================================================
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("Revenue vs Quantity Scatter")
+scatter_fig = create_scatter_chart(filtered_df, x="Quantity", y="TotalAmount", title="Revenue vs Quantity", color="Country", hover_name="ProductDescription")
+st.plotly_chart(scatter_fig, use_container_width=True, key="rev_vs_qty")
+st.markdown('</div>', unsafe_allow_html=True)
 
-Models:
-Not Used On This Page
-"""
+dashboard_divider()
+
+# ==========================================================
+# Sales Data Table & Download
+# ==========================================================
+st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+section_header("Sales Data")
+st.dataframe(filtered_df.head(100), use_container_width=True)
+
+st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
+csv_data = filtered_df.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="⬇️ Download Filtered Sales Data (CSV)",
+    data=csv_data,
+    file_name="retailpulse_sales_filtered.csv",
+    mime="text/csv",
+    key="download_sales_data"
 )
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+dashboard_divider()
+
+# ==========================================================
+# Business Insights
+# ==========================================================
+with st.expander("💡 Business Insights & Recommendations"):
+    st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    
+    insight_1 = {
+        "title": "Revenue Concentration",
+        "description": "Analyze the top products chart to see if your revenue is overly dependent on a few key items. High concentration increases risk.",
+        "icon": "⚠️",
+        "color": "#F59E0B"
+    }
+    
+    insight_2 = {
+        "title": "Seasonal Trends",
+        "description": "Observe the monthly revenue trend to identify peak seasons. Use these patterns to optimize inventory and marketing campaigns.",
+        "icon": "📅",
+        "color": "#2563EB"
+    }
+    
+    insight_3 = {
+        "title": "Geographic Performance",
+        "description": "Evaluate the country revenue chart. Identify high-performing regions for expansion and underperforming regions for targeted promotions.",
+        "icon": "🌍",
+        "color": "#0EA5E9"
+    }
+    
+    render_insight_card(insight_1)
+    render_insight_card(insight_2)
+    render_insight_card(insight_3)
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================================================
+# Footer
+# ==========================================================
+dashboard_footer()
