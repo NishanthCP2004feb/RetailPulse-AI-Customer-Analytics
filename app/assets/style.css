@@ -1,0 +1,35 @@
+/* ===================================================
+   RetailPulse Dashboard Theme
+=================================================== */
+
+.main > div {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+h1, h2, h3 {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+div[data-testid="metric-container"] {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+hr {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stDataFrame {
+    border-radius: 10px;
+}
