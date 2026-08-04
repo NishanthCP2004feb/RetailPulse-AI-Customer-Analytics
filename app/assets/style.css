@@ -226,6 +226,36 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     color: var(--rp-text) !important;
 }
 
+/* Fix: Restore Material Symbols font for expander toggle icons.
+   The global font-family: 'Inter' !important overrides Streamlit's
+   Material Symbols Rounded icon font, causing ligature strings like
+   'expand_more' or 'arrow_drop_down' to render as plain text.
+   These rules restore the icon font on toggle elements only. */
+
+/* Restore icon font on the toggle icon element (font-ligature mode) */
+[data-testid="stExpander"] summary [data-testid="stIconMaterial"],
+[data-testid="stExpander"] summary [data-testid="stExpanderToggleIcon"],
+[data-testid="stExpander"] summary .material-symbols-rounded,
+[data-testid="stExpander"] > details > summary > span:first-of-type {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
+                 'Material Icons Rounded', 'Material Icons', sans-serif !important;
+    -webkit-font-feature-settings: 'liga' 1;
+    font-feature-settings: 'liga' 1;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Ensure SVG icons (newer Streamlit) stay visible */
+[data-testid="stExpander"] summary svg[data-testid="stExpanderToggleIcon"],
+[data-testid="stExpander"] summary > svg,
+[data-testid="stExpander"] summary svg {
+    display: inline-block !important;
+    visibility: visible !important;
+    flex-shrink: 0;
+}
+
 /* ---------- Buttons ---------- */
 .stDownloadButton > button {
     background: linear-gradient(135deg, var(--rp-primary) 0%, var(--rp-primary-dark) 100%) !important;
