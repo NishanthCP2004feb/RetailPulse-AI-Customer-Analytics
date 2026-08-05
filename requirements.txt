@@ -1,0 +1,31 @@
+# ==========================================================
+# RetailPulse — Python Dependencies
+# ==========================================================
+# AI-Powered Customer Analytics & Demand Forecasting
+# Generated from exhaustive import analysis of all modules.
+# ==========================================================
+
+# --- Core Framework ---
+streamlit>=1.24.0
+
+# --- Data Processing ---
+pandas>=1.5.0
+numpy>=1.23.0
+
+# --- Visualization ---
+plotly>=5.14.0
+
+# --- Machine Learning ---
+scikit-learn>=1.2.0
+joblib>=1.2.0
+
+# --- File I/O ---
+openpyxl>=3.1.0
+
+matplotlib>=3.7.0
+
+seaborn>=0.12.0
+xgboost>=2.0.0
+lightgbm>=4.0.0
+prophet>=1.1.5
+statsmodels>=0.14.0
