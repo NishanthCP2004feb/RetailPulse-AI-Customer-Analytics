@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
 from utils.theme import (
     load_css,
@@ -15,15 +14,7 @@ from utils.theme import (
     info_banner
 )
 
-from utils.data_loader import (
-    load_business_reports,
-    load_forecast_results,
-    load_forecast_model_comparison,
-    load_churn_data,
-    load_inventory_summary,
-    load_recommendations,
-    load_business_recommendations
-)
+from utils.data_loader import load_business_reports
 
 from utils.helpers import (
     format_currency,
@@ -147,7 +138,7 @@ with left_health:
 
     st.plotly_chart(
         fig_modules,
-        width="stretch",
+        use_container_width=True,
         key="business_module_coverage"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -166,7 +157,7 @@ with right_health:
 
     st.plotly_chart(
         fig_model,
-        width="stretch",
+        use_container_width=True,
         key="business_forecast_model"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -204,7 +195,7 @@ with left_churn:
 
     st.plotly_chart(
         fig_churn,
-        width="stretch",
+        use_container_width=True,
         key="business_churn_summary"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -234,7 +225,7 @@ with right_recommendation:
 
     st.plotly_chart(
         fig_segments,
-        width="stretch",
+        use_container_width=True,
         key="business_segment_summary"
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -268,7 +259,7 @@ fig_inventory = create_bar_chart(
 
 st.plotly_chart(
     fig_inventory,
-    width="stretch",
+    use_container_width=True,
     key="business_inventory_summary"
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -283,7 +274,7 @@ section_header("💡 Notebook Generated Business Recommendations")
 
 st.dataframe(
     business_df,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -389,7 +380,7 @@ summary_df = pd.DataFrame(
 
 st.dataframe(
     summary_df,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -464,7 +455,7 @@ scorecard = pd.DataFrame(
 
 st.dataframe(
     scorecard,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -601,7 +592,7 @@ management_summary = pd.DataFrame(
 
 st.dataframe(
     management_summary,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )
 st.markdown('</div>', unsafe_allow_html=True)

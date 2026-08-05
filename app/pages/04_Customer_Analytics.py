@@ -14,25 +14,22 @@ from utils.data_loader import load_retail_data, load_customer_rfm
 from utils.helpers import (
     format_currency, 
     format_number, 
-    format_percentage, 
-    format_compact_currency
+    format_percentage
 )
-from utils.metrics import (
-    get_customer_kpis, 
-    get_total_customers, 
-    get_total_revenue, 
-    get_revenue_per_customer
-)
+
 from utils.chart_utils import (
     create_bar_chart, 
     create_horizontal_bar_chart, 
     create_pie_chart, 
     create_scatter_chart, 
     create_histogram, 
-    create_line_chart, 
-    create_box_plot, 
-    create_heatmap, 
-    apply_chart_layout
+    create_line_chart
+)
+
+st.set_page_config(
+    page_title="Customer Analytics",
+    page_icon="👥",
+    layout="wide",
 )
 
 load_css()
@@ -117,7 +114,7 @@ with left_chart:
         title="Top Customers by Revenue",
         color="Revenue"
     )
-    st.plotly_chart(fig_top_customers, width="stretch", key="top_customers_revenue")
+    st.plotly_chart(fig_top_customers, use_container_width=True, key="top_customers_revenue")
 
 with right_chart:
     section_header("🛒 Top 10 Customers by Orders")
@@ -130,7 +127,7 @@ with right_chart:
         title="Top Customers by Orders",
         color="Orders"
     )
-    st.plotly_chart(fig_top_orders, width="stretch", key="top_customer_orders")
+    st.plotly_chart(fig_top_orders, use_container_width=True, key="top_customer_orders")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -146,7 +143,7 @@ with left_hist:
         nbins=40,
         title="Revenue Distribution"
     )
-    st.plotly_chart(fig_revenue_distribution, width="stretch", key="customer_revenue_distribution")
+    st.plotly_chart(fig_revenue_distribution, use_container_width=True, key="customer_revenue_distribution")
 
 with right_hist:
     section_header("📦 Order Frequency")
@@ -156,7 +153,7 @@ with right_hist:
         nbins=30,
         title="Customer Order Frequency"
     )
-    st.plotly_chart(fig_order_frequency, width="stretch", key="customer_order_frequency")
+    st.plotly_chart(fig_order_frequency, use_container_width=True, key="customer_order_frequency")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -180,7 +177,7 @@ with left_country:
         title="Top Countries by Customer Revenue",
         color="Revenue"
     )
-    st.plotly_chart(fig_country, width="stretch", key="country_customer_revenue")
+    st.plotly_chart(fig_country, use_container_width=True, key="country_customer_revenue")
 
 with right_country:
     section_header("📅 Monthly Active Customers")
@@ -198,7 +195,7 @@ with right_country:
         title="Monthly Active Customers",
         markers=True
     )
-    st.plotly_chart(fig_monthly_customers, width="stretch", key="monthly_active_customers")
+    st.plotly_chart(fig_monthly_customers, use_container_width=True, key="monthly_active_customers")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -216,7 +213,7 @@ if search_customer:
 
 section_header("📋 Customer Summary")
 display_table = display_table.sort_values("Revenue", ascending=False)
-st.dataframe(display_table, width="stretch", hide_index=True)
+st.dataframe(display_table, use_container_width=True, hide_index=True)
 
 st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
 csv = display_table.to_csv(index=False).encode("utf-8")

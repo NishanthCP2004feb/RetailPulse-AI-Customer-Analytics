@@ -210,7 +210,7 @@ with left_chart:
     
     st.plotly_chart(
         fig_top_revenue,
-        width="stretch",
+        use_container_width=True,
         key="top_revenue_products_chart",
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -235,7 +235,7 @@ with right_chart:
     
     st.plotly_chart(
         fig_top_quantity,
-        width="stretch",
+        use_container_width=True,
         key="top_quantity_products_chart",
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -263,7 +263,7 @@ fig_scatter = apply_chart_layout(fig_scatter, height=600)
 
 st.plotly_chart(
     fig_scatter,
-    width="stretch",
+    use_container_width=True,
     key="revenue_quantity_scatter_chart",
 )
 st.markdown('</div>', unsafe_allow_html=True)
@@ -291,7 +291,7 @@ with left_hist:
     
     st.plotly_chart(
         fig_histogram,
-        width="stretch",
+        use_container_width=True,
         key="revenue_distribution_chart",
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -339,7 +339,7 @@ with right_hist:
     
     st.plotly_chart(
         fig_pareto,
-        width="stretch",
+        use_container_width=True,
         key="pareto_analysis_chart",
     )
     st.markdown('</div>', unsafe_allow_html=True)
@@ -381,7 +381,7 @@ display_table = filtered_products.sort_values("Revenue", ascending=False)
 
 st.dataframe(
     display_table,
-    width="stretch",
+    use_container_width=True,
     hide_index=True,
 )
 

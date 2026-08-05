@@ -25,7 +25,7 @@ from utils.theme import (
 )
 from utils.data_loader import load_forecast_reports
 from utils.helpers import format_currency, format_number, format_percentage
-from utils.metrics import get_forecast_kpis
+
 from utils.chart_utils import (
     create_bar_chart, 
     create_line_chart, 
@@ -109,7 +109,7 @@ fig_actual_vs_predicted = create_forecast_chart(
     actual_column="ActualSales", 
     forecast_column="PredictedSales"
 )
-st.plotly_chart(fig_actual_vs_predicted, width="stretch", key="actual_vs_predicted_chart")
+st.plotly_chart(fig_actual_vs_predicted, use_container_width=True, key="actual_vs_predicted_chart")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -130,7 +130,7 @@ with left_chart:
         title="Prediction Error"
     )
     fig_error.add_hline(y=0, line_dash="dash", line_color="red")
-    st.plotly_chart(fig_error, width="stretch", key="forecast_error_chart")
+    st.plotly_chart(fig_error, use_container_width=True, key="forecast_error_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_chart:
@@ -143,7 +143,7 @@ with right_chart:
         title="Forecast Error Distribution"
     )
     fig_error_distribution = apply_chart_layout(fig_error_distribution)
-    st.plotly_chart(fig_error_distribution, width="stretch", key="forecast_error_distribution")
+    st.plotly_chart(fig_error_distribution, use_container_width=True, key="forecast_error_distribution")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -168,7 +168,7 @@ fig_monthly_forecast = px.bar(
     title="Monthly Actual vs Predicted Sales"
 )
 fig_monthly_forecast = apply_chart_layout(fig_monthly_forecast)
-st.plotly_chart(fig_monthly_forecast, width="stretch", key="monthly_forecast_summary")
+st.plotly_chart(fig_monthly_forecast, use_container_width=True, key="monthly_forecast_summary")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -206,7 +206,7 @@ with left_model:
         color="MAE",
         title="Model MAE Comparison"
     )
-    st.plotly_chart(fig_mae, width="stretch", key="forecast_mae_chart")
+    st.plotly_chart(fig_mae, use_container_width=True, key="forecast_mae_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_model:
@@ -219,7 +219,7 @@ with right_model:
         color="RMSE",
         title="Model RMSE Comparison"
     )
-    st.plotly_chart(fig_rmse, width="stretch", key="forecast_rmse_chart")
+    st.plotly_chart(fig_rmse, use_container_width=True, key="forecast_rmse_chart")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -241,7 +241,7 @@ fig_model_scatter = px.scatter(
 )
 fig_model_scatter.update_traces(textposition="top center")
 fig_model_scatter = apply_chart_layout(fig_model_scatter, height=550)
-st.plotly_chart(fig_model_scatter, width="stretch", key="forecast_model_scatter")
+st.plotly_chart(fig_model_scatter, use_container_width=True, key="forecast_model_scatter")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -252,7 +252,7 @@ dashboard_divider()
 section_header("📋 Model Comparison")
 model_table = model_df.sort_values("RMSE").reset_index(drop=True)
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
-st.dataframe(model_table, width="stretch", hide_index=True)
+st.dataframe(model_table, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -263,7 +263,7 @@ dashboard_divider()
 section_header("📋 Forecast Results")
 forecast_display = forecast_df.sort_values("Date").copy()
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
-st.dataframe(forecast_display, width="stretch", hide_index=True)
+st.dataframe(forecast_display, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -273,7 +273,7 @@ dashboard_divider()
 # ==========================================================
 section_header("📊 Forecast Dataset Summary")
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
-st.dataframe(summary_df, width="stretch", hide_index=True)
+st.dataframe(summary_df, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()

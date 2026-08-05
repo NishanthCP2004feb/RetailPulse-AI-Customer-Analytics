@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
 from utils.theme import (
     load_css,
@@ -140,7 +139,7 @@ fig_builder = create_bar_chart(
     color=selected_metric,
     text_auto=".2s"
 )
-st.plotly_chart(fig_builder, width="stretch", key="interactive_chart_builder")
+st.plotly_chart(fig_builder, use_container_width=True, key="interactive_chart_builder")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -163,7 +162,7 @@ fig_monthly = create_line_chart(
     title="Monthly Revenue",
     markers=True
 )
-st.plotly_chart(fig_monthly, width="stretch", key="interactive_monthly_sales")
+st.plotly_chart(fig_monthly, use_container_width=True, key="interactive_monthly_sales")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -191,7 +190,7 @@ with left_country:
         color="TotalAmount",
         text_auto=".2s"
     )
-    st.plotly_chart(fig_country, width="stretch", key="interactive_country_sales")
+    st.plotly_chart(fig_country, use_container_width=True, key="interactive_country_sales")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_product:
@@ -211,7 +210,7 @@ with right_product:
         color="TotalAmount",
         text_auto=".2s"
     )
-    st.plotly_chart(fig_products, width="stretch", key="interactive_products")
+    st.plotly_chart(fig_products, use_container_width=True, key="interactive_products")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -277,7 +276,7 @@ summary_table = (
 )
 
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
-st.dataframe(summary_table, width="stretch", hide_index=True)
+st.dataframe(summary_table, use_container_width=True, hide_index=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -301,7 +300,7 @@ heatmap = (
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 fig_heatmap = create_heatmap(heatmap, title="Revenue Heatmap")
 fig_heatmap.update_layout(height=650)
-st.plotly_chart(fig_heatmap, width="stretch", key="interactive_heatmap")
+st.plotly_chart(fig_heatmap, use_container_width=True, key="interactive_heatmap")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -323,7 +322,7 @@ fig_hour = create_line_chart(
     markers=True
 )
 fig_hour.update_layout(xaxis_title="Hour of Day", yaxis_title="Revenue (£)")
-st.plotly_chart(fig_hour, width="stretch", key="interactive_hourly_sales")
+st.plotly_chart(fig_hour, use_container_width=True, key="interactive_hourly_sales")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -352,7 +351,7 @@ with left_weekend:
         color="Revenue",
         text_auto=".2s"
     )
-    st.plotly_chart(fig_weekend, width="stretch", key="interactive_weekend_revenue")
+    st.plotly_chart(fig_weekend, use_container_width=True, key="interactive_weekend_revenue")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_weekend:
@@ -365,7 +364,7 @@ with right_weekend:
         color="Orders",
         text_auto=".2s"
     )
-    st.plotly_chart(fig_weekend_orders, width="stretch", key="interactive_weekend_orders")
+    st.plotly_chart(fig_weekend_orders, use_container_width=True, key="interactive_weekend_orders")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -380,7 +379,7 @@ with left_basket:
     section_header("🛒 Basket Value Distribution")
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
     fig_basket = create_histogram(explore_df, x="BasketValue", nbins=30, title="Basket Value Distribution")
-    st.plotly_chart(fig_basket, width="stretch", key="interactive_basket_distribution")
+    st.plotly_chart(fig_basket, use_container_width=True, key="interactive_basket_distribution")
     st.markdown('</div>', unsafe_allow_html=True)
 
 with right_basket:
@@ -394,7 +393,7 @@ with right_basket:
         hover_name="ProductDescription",
         title="Basket Size vs Basket Value"
     )
-    st.plotly_chart(fig_basket_scatter, width="stretch", key="interactive_basket_scatter")
+    st.plotly_chart(fig_basket_scatter, use_container_width=True, key="interactive_basket_scatter")
     st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -421,7 +420,7 @@ fig_country_compare = create_scatter_chart(
     title="Country Performance Comparison"
 )
 fig_country_compare.update_layout(height=550)
-st.plotly_chart(fig_country_compare, width="stretch", key="interactive_country_comparison")
+st.plotly_chart(fig_country_compare, use_container_width=True, key="interactive_country_comparison")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
@@ -448,7 +447,7 @@ fig_product_analysis = create_scatter_chart(
     title="Revenue vs Quantity"
 )
 fig_product_analysis.update_layout(height=550)
-st.plotly_chart(fig_product_analysis, width="stretch", key="interactive_product_analysis")
+st.plotly_chart(fig_product_analysis, use_container_width=True, key="interactive_product_analysis")
 st.markdown('</div>', unsafe_allow_html=True)
 
 dashboard_divider()
