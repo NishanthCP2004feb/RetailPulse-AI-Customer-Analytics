@@ -217,6 +217,3 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 data/raw/
-
-data/processed/retail_cleaned.csv
-data/processed/analysis_data.csv
