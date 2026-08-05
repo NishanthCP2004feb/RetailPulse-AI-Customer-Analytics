@@ -35,6 +35,7 @@ def _load_csv(path: Path, parse_dates=None):
         df = pd.read_csv(path)
 
         print("Columns:", df.columns.tolist())
+        print(df.head())
 
         if parse_dates:
             for col in parse_dates:
