@@ -25,7 +25,23 @@ def _load_csv(path: Path, parse_dates=None):
         st.stop()
 
     try:
-        return pd.read_csv(path, parse_dates=parse_dates)
+        import os
+
+        print("=" * 60)
+        print("Loading:", path)
+        print("Exists:", path.exists())
+        print("Size (bytes):", os.path.getsize(path))
+
+        df = pd.read_csv(path)
+
+        print("Columns:", df.columns.tolist())
+
+        if parse_dates:
+            for col in parse_dates:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col])
+
+        return df
 
     except Exception as e:
         st.error(f"Unable to load\n{path.name}\n\n{e}")
