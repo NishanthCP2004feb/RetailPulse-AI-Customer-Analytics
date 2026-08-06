@@ -237,7 +237,8 @@ fig_model_scatter = px.scatter(
     size="RMSE",
     hover_name="Model",
     text="Model",
-    title="Forecast Model Comparison"
+    title="Forecast Model Comparison",
+    render_mode="svg",
 )
 fig_model_scatter.update_traces(textposition="top center")
 fig_model_scatter = apply_chart_layout(fig_model_scatter, height=550)

@@ -222,6 +222,7 @@ def create_scatter_chart(
         size=size,
         hover_name=hover_name,
         title=title,
+        render_mode="svg",
     )
 
     return apply_chart_layout(fig, title)
