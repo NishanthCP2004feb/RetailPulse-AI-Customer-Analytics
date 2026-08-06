@@ -256,6 +256,23 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
     flex-shrink: 0;
 }
 
+/* Fix: Restore Material Symbols font for the sidebar collapse/expand
+   toggle button so the 'double_arrow_right' ligature renders as an icon
+   instead of plain text. Same root-cause as the expander fix above. */
+[data-testid="collapsedControl"] span,
+[data-testid="collapsedControl"] [data-testid="stIconMaterial"],
+[data-testid="collapsedControl"] .material-symbols-rounded,
+button[kind="headerNoPadding"] span {
+    font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
+                 'Material Icons Rounded', 'Material Icons', sans-serif !important;
+    -webkit-font-feature-settings: 'liga' 1;
+    font-feature-settings: 'liga' 1;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
 /* ---------- Buttons ---------- */
 .stDownloadButton > button {
     background: linear-gradient(135deg, var(--rp-primary) 0%, var(--rp-primary-dark) 100%) !important;
