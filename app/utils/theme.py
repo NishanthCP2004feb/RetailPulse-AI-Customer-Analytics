@@ -77,10 +77,9 @@ PLOTLY_SEQUENCE = px.colors.qualitative.Set2
 # ==========================================================
 
 
-def load_css():
-    """
-    Load the global stylesheet.
-    """
+@st.cache_data(show_spinner=False)
+def _read_css_file() -> str:
+    """Read the CSS file once and cache the contents."""
     css_path = (
         Path(__file__).resolve().parents[1]
         / "assets"
@@ -89,10 +88,20 @@ def load_css():
 
     if css_path.exists():
         with open(css_path, encoding="utf-8") as f:
-            st.markdown(
-                f"<style>{f.read()}</style>",
-                unsafe_allow_html=True,
-            )
+            return f.read()
+    return ""
+
+
+def load_css():
+    """
+    Load the global stylesheet.
+    """
+    css_text = _read_css_file()
+    if css_text:
+        st.markdown(
+            f"<style>{css_text}</style>",
+            unsafe_allow_html=True,
+        )
     else:
         st.warning("style.css not found.")
 

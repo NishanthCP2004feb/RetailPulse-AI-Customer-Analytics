@@ -173,13 +173,12 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 }
 
 .rp-kpi-card .kpi-value {
-    font-size: clamp(1.15rem, 1.7vw, 1.75rem);
+    font-size: clamp(0.95rem, 1.4vw, 1.6rem);
     font-weight: 800;
     color: var(--rp-text);
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    word-break: break-word;
+    overflow-wrap: break-word;
     font-variant-numeric: tabular-nums;
 }
 
@@ -258,11 +257,23 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {
 
 /* Fix: Restore Material Symbols font for the sidebar collapse/expand
    toggle button so the 'double_arrow_right' ligature renders as an icon
-   instead of plain text. Same root-cause as the expander fix above. */
+   instead of plain text. Same root-cause as the expander fix above.
+   Broadened selectors cover both older and newer Streamlit DOM structures. */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    visibility: visible !important;
+    display: flex !important;
+    z-index: 999;
+}
+
 [data-testid="collapsedControl"] span,
 [data-testid="collapsedControl"] [data-testid="stIconMaterial"],
 [data-testid="collapsedControl"] .material-symbols-rounded,
-button[kind="headerNoPadding"] span {
+[data-testid="stSidebarCollapsedControl"] span,
+[data-testid="stSidebarCollapsedControl"] [data-testid="stIconMaterial"],
+[data-testid="stSidebarCollapsedControl"] .material-symbols-rounded,
+button[kind="headerNoPadding"] span,
+[data-testid="stSidebar"] button[kind="headerNoPadding"] span {
     font-family: 'Material Symbols Rounded', 'Material Symbols Outlined',
                  'Material Icons Rounded', 'Material Icons', sans-serif !important;
     -webkit-font-feature-settings: 'liga' 1;
@@ -271,6 +282,14 @@ button[kind="headerNoPadding"] span {
     direction: ltr;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+}
+
+/* Ensure sidebar toggle SVG icons (newer Streamlit) stay visible */
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="stSidebar"] button[kind="headerNoPadding"] svg {
+    display: inline-block !important;
+    visibility: visible !important;
 }
 
 /* ---------- Buttons ---------- */

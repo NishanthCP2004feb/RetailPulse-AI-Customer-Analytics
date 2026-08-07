@@ -12,7 +12,7 @@ from utils.theme import (
 )
 from utils.data_loader import load_analysis_data
 from utils.helpers import format_currency, format_number
-from utils.metrics import get_sales_kpis, get_basket_kpis, get_dataset_summary
+from utils.metrics import get_sales_kpis, get_basket_kpis
 from utils.chart_utils import (
     create_bar_chart,
     create_horizontal_bar_chart,
@@ -21,6 +21,27 @@ from utils.chart_utils import (
     create_histogram,
     create_heatmap,
 )
+
+@st.cache_data(show_spinner=False)
+def _get_filter_options(_df):
+    """Return cached unique sorted filter values."""
+    countries = sorted(_df["Country"].dropna().unique())
+    years = sorted(_df["InvoiceYear"].unique())
+    return countries, years
+
+@st.cache_data(show_spinner=False)
+def _convert_df_to_csv(_df):
+    """Cache CSV conversion to avoid recomputing on every rerun."""
+    return _df.to_csv(index=False).encode('utf-8')
+
+@st.cache_data(show_spinner=False)
+def _get_data_quality(_df):
+    """Cache expensive data quality metrics."""
+    return {
+        "rows": len(_df),
+        "missing": int(_df.isna().sum().sum()),
+        "duplicates": int(_df.duplicated().sum()),
+    }
 
 # ==========================================================
 # Page Configuration
@@ -58,10 +79,10 @@ if df.empty:
 
 st.sidebar.header("🔎 Interactive Filters")
 
-countries = sorted(df["Country"].dropna().unique())
+countries, years = _get_filter_options(df)
+
 selected_countries = st.sidebar.multiselect("Country", countries, default=countries)
 
-years = sorted(df["InvoiceYear"].unique())
 selected_years = st.sidebar.multiselect("Invoice Year", years, default=years)
 
 filtered_df = df[
@@ -385,8 +406,9 @@ with left_basket:
 with right_basket:
     section_header("📦 Basket Size vs Basket Value")
     st.markdown('<div class="rp-card">', unsafe_allow_html=True)
+    scatter_basket = explore_df.sample(n=min(5000, len(explore_df)), random_state=42) if len(explore_df) > 5000 else explore_df
     fig_basket_scatter = create_scatter_chart(
-        explore_df,
+        scatter_basket,
         x="BasketSize",
         y="BasketValue",
         color="Country",
@@ -492,11 +514,11 @@ dashboard_divider()
 
 section_header("📈 Data Quality Summary")
 
-ds_summary = get_dataset_summary(explore_df)
+dq = _get_data_quality(explore_df)
 render_kpi_row([
-    {"title": "Rows", "value": format_number(ds_summary.get("Rows", len(explore_df))), "icon": "📄"},
-    {"title": "Missing Values", "value": format_number(ds_summary.get("Missing Values", int(explore_df.isna().sum().sum()))), "icon": "❓"},
-    {"title": "Duplicate Rows", "value": format_number(ds_summary.get("Duplicate Rows", int(explore_df.duplicated().sum()))), "icon": "👯"}
+    {"title": "Rows", "value": format_number(dq["rows"]), "icon": "📄"},
+    {"title": "Missing Values", "value": format_number(dq["missing"]), "icon": "❓"},
+    {"title": "Duplicate Rows", "value": format_number(dq["duplicates"]), "icon": "👯"}
 ])
 
 dashboard_divider()
@@ -526,7 +548,7 @@ This dashboard is designed for interactive business exploration using the proces
 section_header("📥 Export Filtered Dataset")
 
 st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
-export_csv = explore_df.to_csv(index=False).encode("utf-8")
+export_csv = _convert_df_to_csv(explore_df)
 st.download_button(
     label="📥 Download Filtered Dataset",
     data=export_csv,

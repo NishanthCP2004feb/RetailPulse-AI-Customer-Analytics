@@ -41,6 +41,19 @@ from utils.chart_utils import (
     apply_chart_layout
 )
 
+@st.cache_data(show_spinner=False)
+def _get_filter_options(_df):
+    """Return cached unique sorted filter values."""
+    countries = sorted(_df["Country"].dropna().unique())
+    years = sorted(_df["InvoiceYear"].dropna().unique())
+    months = sorted(_df["MonthName"].dropna().unique())
+    return countries, years, months
+
+@st.cache_data(show_spinner=False)
+def _convert_df_to_csv(_df):
+    """Cache CSV conversion to avoid recomputing on every rerun."""
+    return _df.to_csv(index=False).encode('utf-8')
+
 # ==========================================================
 # Page Config
 # ==========================================================
@@ -75,22 +88,21 @@ if df.empty:
 # ==========================================================
 st.sidebar.header("🎛 Sales Filters")
 
+countries, years, months = _get_filter_options(df)
+
 # Handle missing or empty lists for filters
-countries = sorted(df["Country"].dropna().unique())
 selected_country = st.sidebar.multiselect(
     "Country",
     countries,
     default=countries,
 )
 
-years = sorted(df["InvoiceYear"].dropna().unique())
 selected_year = st.sidebar.multiselect(
     "Invoice Year",
     years,
     default=years,
 )
 
-months = sorted(df["MonthName"].dropna().unique())
 selected_month = st.sidebar.multiselect(
     "Month",
     months,
@@ -199,7 +211,8 @@ with col6:
 # ==========================================================
 st.markdown('<div class="rp-card">', unsafe_allow_html=True)
 section_header("Revenue vs Quantity Scatter")
-scatter_fig = create_scatter_chart(filtered_df, x="Quantity", y="TotalAmount", title="Revenue vs Quantity", color="Country", hover_name="ProductDescription")
+scatter_sample = filtered_df.sample(n=min(5000, len(filtered_df)), random_state=42) if len(filtered_df) > 5000 else filtered_df
+scatter_fig = create_scatter_chart(scatter_sample, x="Quantity", y="TotalAmount", title="Revenue vs Quantity", color="Country", hover_name="ProductDescription")
 st.plotly_chart(scatter_fig, use_container_width=True, key="rev_vs_qty")
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -213,7 +226,7 @@ section_header("Sales Data")
 st.dataframe(filtered_df.head(100), use_container_width=True)
 
 st.markdown('<div class="rp-download-btn">', unsafe_allow_html=True)
-csv_data = filtered_df.to_csv(index=False).encode('utf-8')
+csv_data = _convert_df_to_csv(filtered_df)
 st.download_button(
     label="⬇️ Download Filtered Sales Data (CSV)",
     data=csv_data,
